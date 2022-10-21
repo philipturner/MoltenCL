@@ -2,7 +2,7 @@
 
 The missing OpenCL 3.0 driver for macOS (or iOS). This un-deprecates OpenCL, making Apple devices viable for high-performance computing through an industry-standard API. Behind the scenes, it uses Metal to minimize CPU overhead and maximize GPU performance.
 
-Supported features (not an exhaustive list):
+Features (not exhaustive):
 - half precision
 - double precision (though emulation; runs fastest on Apple-designed GPUs with native 64-bit integer arithmetic)
 - does not flush the `cl_queue` after every command (which Apple's OpenCL driver does)
