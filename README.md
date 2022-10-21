@@ -20,6 +20,4 @@ Operating system support:
 
 ## Licensing
 
-MoltenCL is available for free under the MIT license. MoltenCL is not owned or endorsed by Apple or the Khronos Group.
-
-Apple owns the copyright to OpenCL and the Khronos Group holds the copyright to MoltenVK.
+MoltenCL is available for free under the MIT license. MoltenCL is not owned or endorsed by Apple or the Khronos Group. However, OpenCL is a trademark of Apple.
