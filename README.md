@@ -6,7 +6,7 @@ Features (not exhaustive):
 - half precision
 - double precision (through emulation; runs fastest on Apple-designed GPUs with native 64-bit integer math)
 - does not flush the `cl_queue` after every command (which Apple's OpenCL 1.2 driver does)
-- compiling shaders OpenCL C and Metal Shading Language
+- compiling shaders in OpenCL C and Metal Shading Language
 - transforming OpenCL SPIR-V and AIR binary code into kernel objects
 - hardware-accelerated matrix multiplication intrinsics for AI/ML (`simdgroup_matrix`)
 - unified shared memory pointers that expose GPU virtual addresses
