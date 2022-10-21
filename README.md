@@ -18,6 +18,6 @@ Operating system support:
 - requires at least `MTLGPUFamily.apple6` or `MTLGPUFamily.mac2` - anything that can run Metal 3
 - to optimize AIR binaries compiled from OpenCL source, you must have Metal command-line tools installed (optional)
 
-# Licensing
+## Licensing
 
 MoltenCL is available for free under the MIT license. This library is not owned or endorsed by Apple or the Khronos Group.
