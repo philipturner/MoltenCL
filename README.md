@@ -20,4 +20,4 @@ Operating system support:
 
 # Licensing
 
-MoltenCL is available for free under the MIT license. This library is not owned or endorsed by Apple.
+MoltenCL is available for free under the MIT license. This library is not owned or endorsed by Apple or the Khronos Group.
