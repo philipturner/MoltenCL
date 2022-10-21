@@ -17,7 +17,7 @@ Features (not exhaustive):
 Operating system support:
 - iOS/tvOS 16+ (may need to compile shaders ahead-of-time for optimal performance)
 - macOS 13+
-- requires at least `MTLGPUFamily.apple6` or `MTLGPUFamily.mac2` - anything that can run Metal 3
+- requires at least `MTLGPUFamily::Apple6` or `MTLGPUFamily::Mac2` - anything that can run Metal 3
 - to optimize AIR binaries compiled from OpenCL source, you must have Metal command-line tools installed (optional)
 
 ## Attribution and Licensing
