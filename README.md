@@ -1,6 +1,6 @@
 # MoltenCL
 
-The missing OpenCL 3.0 driver for macOS (or iOS). This un-deprecates OpenCL, making Apple devices viable for high-performance computing through an industry-standard API. Behind the scenes, it uses Metal and Swift to maximize both CPU and GPU performance.
+The missing OpenCL 3.0 driver for macOS (or iOS). This un-deprecates OpenCL, making Apple devices viable for high-performance computing through an industry-standard API. Behind the scenes, it uses Metal to minimize CPU overhead and maximize GPU performance.
 
 Supported features (not an exhaustive list):
 - half precision
