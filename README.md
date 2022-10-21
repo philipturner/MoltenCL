@@ -4,7 +4,7 @@ The missing OpenCL 3.0 driver for macOS. This un-deprecates OpenCL, making Apple
 
 Supported features (not an exhaustive list):
 - half precision
-- double precision (though emulation; runs fastest on Apple-designed GPUs)
+- double precision (though [emulation](https://github.com/philipturner/metal-float64); runs fastest on Apple-designed GPUs)
 - does not flush the `cl_queue` after every command (which Apple's OpenCL driver does)
 - compiling shaders from MSL and OpenCL C source languages
 - transforming OpenCL SPIR-V and AIR binary code into kernel objects
