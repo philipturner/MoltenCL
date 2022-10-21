@@ -26,4 +26,4 @@ MoltenCL is available for free under the MIT license. MoltenCL is not owned or e
 
 Uses [philipturner/metal-float64](https://github.com/philipturner/metal-float64) to emulate double-precision arithmetic.
 
-Catch phrase based on Homebrew: "The missing package manager for macOS (or Linux)". Homebrew came up with the original idea.
+Homebrew came up with the catch phrase "The missing package manager for macOS (or Linux)". I used that phrase for ideas when coming up with a subtitle for this repository.
