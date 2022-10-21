@@ -8,7 +8,7 @@ Supported features (not an exhaustive list):
 - does not flush the `cl_queue` after every command (which Apple's OpenCL driver does)
 - compiling shaders OpenCL C and Metal Shading Language
 - transforming OpenCL SPIR-V and AIR binary code into kernel objects
-- access to hardware-accelerated matrix multiplication intrinsics (`simdgroup_matrix`)
+- hardware-accelerated matrix multiplication intrinsics (`simdgroup_matrix`)
 - unified shared memory pointers that expose GPU virtual addresses
 - built-in integration with SYCL frontends
 
