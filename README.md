@@ -11,6 +11,7 @@ Supported features (not an exhaustive list):
 - hardware-accelerated matrix multiplication intrinsics (`simdgroup_matrix`)
 - unified shared memory pointers that expose GPU virtual addresses
 - built-in integration with SYCL frontends
+- zero-overhead access to the Metal runtime objects that back OpenCL API types
 
 Operating system support:
 - iOS/tvOS 16+ (may need to compile shaders ahead-of-time for optimal performance)
