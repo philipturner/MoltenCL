@@ -3,9 +3,9 @@
 The missing OpenCL 3.0 driver for macOS. This un-deprecates OpenCL, making Apple devices usable for high-performance computing through an industry-standard API.
 
 Supported features (not an exhaustive list):
-- does not flush the `cl_queue` after every command (which Apple's OpenCL driver likely does)
 - half precision
 - double precision (though emulation; runs fastest on Apple-designed GPUs)
+- does not flush the `cl_queue` after every command (which Apple's OpenCL driver likely does)
 - compiling shaders from MSL and OpenCL C source languages
 - transforming OpenCL SPIR-V and AIR binary code into kernel objects
 - access to hardware-accelerated matrix multiplication intrinsics
