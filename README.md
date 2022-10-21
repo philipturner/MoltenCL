@@ -11,7 +11,7 @@ Supported features (not an exhaustive list):
 - hardware-accelerated matrix multiplication intrinsics (`simdgroup_matrix`)
 - unified shared memory pointers that expose GPU virtual addresses
 - built-in integration with SYCL frontends
-- zero-overhead access to the Metal runtime objects that back OpenCL API types (through C++ and Swift)
+- zero-overhead access to the Metal runtime objects that back OpenCL API types (through C, C++, and Swift)
 - first-class Swift bindings for integration into iOS apps
 
 Operating system support:
