@@ -1,6 +1,6 @@
 # MoltenCL
 
-The missing OpenCL 3.0 driver for macOS
+The missing OpenCL 3.0 driver for macOS. This un-deprecates OpenCL, making Apple devices usable for high-performance computing through an industry-standard API.
 
 Supported features (not an exhaustive list):
 - does not flush the `cl_queue` after every command (which Apple's OpenCL driver likely does)
@@ -17,3 +17,7 @@ Operating system support:
 - macOS 13+
 - requires at least `MTLGPUFamily.apple6` or `MTLGPUFamily.mac2` - anything that can run Metal 3
 - to optimize AIR binaries compiled from OpenCL source, you must have Metal command-line tools installed (optional)
+
+# Licensing
+
+MoltenCL is available for free under the MIT license. This library is not owned or endorsed by Apple.
