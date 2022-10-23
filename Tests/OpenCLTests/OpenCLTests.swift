@@ -3,9 +3,10 @@ import XCTest
 
 final class OpenCLTests: XCTestCase {
     func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual(OpenCL().text, "Hello, World!")
+        print(FileManager.default.currentDirectoryPath)
+        let path = "/Users/philipturner/Documents/GROMACS/MoltenCL/.build/arm64-apple-macosx/release/libOpenCL.dylib"
+        let libOpenCL = dlopen(path, RTLD_LAZY | RTLD_GLOBAL)
+        print(libOpenCL)
+//        XCTAssertEqual(clGetPlatformIDs(2), 2)
     }
 }
