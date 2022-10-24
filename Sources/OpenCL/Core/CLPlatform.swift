@@ -42,13 +42,29 @@ public class CLPlatform {
 //            "cl_khr_initialize_memory",
             "cl_khr_local_int32_base_atomics",
             "cl_khr_local_int32_extended_atomics",
-            "cl_khr_integer_dot_product", // implement through mad24 or 16-bit multiply
+            "cl_khr_integer_dot_product", // implement through mad24 (16-bit dot), 16-bit multiply (8-bit dot)
+            "cl_khr_mipmap_image",
+            "cl_khr_mipmap_image_writes",
+//            "cl_khr_priority_hints",
+            "cl_khr_spir", // sort of deprecated, but not a good idea to exclude
+            "cl_khr_srgb_image_writes",
+            "cl_khr_subgroups",
+            "cl_khr_subgroup_ballot",
+            // Specification forces cluster size to be compile-time constant, so we can implement
+            // sizes other than {4, simd_size} through emulation. On Apple6, {simd_size} must also
+            // happen through emulation.
+            "cl_khr_subgroup_clustered_reduce",
+            "cl_khr_subgroup_extended_types",
         ]
         
         #if arch(arm64)
         // TODO: Check whether default device supports 'Apple7' instead.
-        output.append("cl_APPLE_simdgroup_matrix")
+        // SIMD-scoped matrix multiply operations (`simdgroup_matrix`)
+        output.append("cl_APPLE_subgroup_matrix")
         #endif
+//        if Apple8 <- TODO: Test on my A15 device
+        // SIMD shift and fill
+//        output.append("cl_APPLE_subgroup_shuffle_and_fill")
         return output
     }()
     
