@@ -23,9 +23,12 @@ let package = Package(
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
-            name: "OpenCL",
+            name: "COpenCL",
             dependencies: []),
         .target(
+            name: "OpenCL",
+            dependencies: ["COpenCL"]),
+        .executableTarget(
             name: "ValidateLibrary",
             dependencies: []),
         .testTarget(

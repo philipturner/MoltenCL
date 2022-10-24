@@ -1,0 +1,6 @@
+module COpenCL {
+  header "cl_half.h"
+  header "cl_icd.h"
+  header "opencl.h"
+  export *
+}

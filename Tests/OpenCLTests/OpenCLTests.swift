@@ -1,12 +1,18 @@
 import XCTest
-@testable import OpenCL
+import COpenCL
+import OpenCL
 
 final class OpenCLTests: XCTestCase {
     func testExample() throws {
-        print(FileManager.default.currentDirectoryPath)
-        let path = "/Users/philipturner/Documents/GROMACS/MoltenCL/.build/arm64-apple-macosx/release/libOpenCL.dylib"
-        let libOpenCL = dlopen(path, RTLD_LAZY | RTLD_GLOBAL)
-        print(libOpenCL)
-//        XCTAssertEqual(clGetPlatformIDs(2), 2)
+        var numPlatforms: UInt32 = 0
+        clGetPlatformIDs(0, nil, &numPlatforms)
+        XCTAssertEqual(numPlatforms, 1)
+        
+        withUnsafeTemporaryAllocation(
+            of: cl_platform_id.self, capacity: 1
+        ) { bufferPointer in
+            clGetPlatformIDs(1, bufferPointer.baseAddress, nil)
+            XCTAssertNotEqual(Int(bitPattern: bufferPointer[0]), 0)
+        }
     }
 }
