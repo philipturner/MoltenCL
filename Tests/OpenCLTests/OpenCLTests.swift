@@ -9,7 +9,7 @@ final class OpenCLTests: XCTestCase {
         XCTAssertEqual(numPlatforms, 1)
         
         withUnsafeTemporaryAllocation(
-            of: cl_platform_id.self, capacity: 1
+            of: cl_platform_id?.self, capacity: 1
         ) { bufferPointer in
             clGetPlatformIDs(1, bufferPointer.baseAddress, nil)
             XCTAssertNotEqual(Int(bitPattern: bufferPointer[0]), 0)
