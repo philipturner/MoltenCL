@@ -51,14 +51,19 @@ public class CLPlatform {
             "cl_khr_subgroups",
             "cl_khr_subgroup_ballot",
             // Specification forces cluster size to be compile-time constant, so we can implement
-            // sizes other than {4, simd_size} through emulation. On Apple6, {simd_size} must also
-            // happen through emulation.
+            // sizes other than {4, simd_size} through emulation.
             "cl_khr_subgroup_clustered_reduce",
             "cl_khr_subgroup_extended_types",
+//            "cl_khr_subgroup_named_barrier",
+            "cl_khr_subgroup_non_uniform_arithmetic",
+            "cl_khr_subgroup_non_uniform_vote",
+            "cl_khr_subgroup_rotate",
+            "cl_khr_subgroup_shuffle",
+            "cl_khr_subgroup_shuffle_relative",
+//            "cl_khr_suggested_local_work_size", // Apple7 GPU cores execute 256 threads per clockxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         ]
         
         #if arch(arm64)
-        // TODO: Check whether default device supports 'Apple7' instead.
         // SIMD-scoped matrix multiply operations (`simdgroup_matrix`)
         output.append("cl_APPLE_subgroup_matrix")
         #endif
