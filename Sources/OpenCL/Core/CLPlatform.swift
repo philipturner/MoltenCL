@@ -9,42 +9,86 @@ import COpenCL
 import Foundation
 
 public class CLPlatform {
-    init() {
+    // Internal so the user can't generate a custom platform.
+    internal init() {
         
     }
     
     public static let `default` = CLPlatform()
     
+    // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000: 996a022a7ad45583591df5e665af0f8f38b85e83
+    private static let _version: String = "OpenCL 3.0 (Sep 15 2022 21:00:00)"
+    
+    private static let _extensions: [String] = { () -> [String] in
+        var output: [String] = [
+            // If I don't yet know whether an extension is possible, it is commented out.
+            "cl_khr_3d_image_writes",
+//            "cl_khr_async_work_group_copy_fence",
+            "cl_khr_byte_addressable_store",
+            "cl_khr_create_command_queue",
+            "cl_khr_depth_images",
+//            "cl_khr_device_enqueue_local_arg_types",
+            "cl_khr_device_uuid",
+            "cl_khr_extended_async_copies",
+            "cl_khr_extended_bit_ops",
+            "cl_khr_extended_versioning",
+            "cl_khr_expect_assume",
+            "cl_khr_fp16",
+            "cl_khr_fp64",
+            "cl_khr_global_int32_base_atomics",
+            "cl_khr_global_int32_extended_atomics",
+            "cl_khr_il_program",
+            "cl_khr_image2d_from_buffer",
+//            "cl_khr_initialize_memory",
+            "cl_khr_local_int32_base_atomics",
+            "cl_khr_local_int32_extended_atomics",
+            "cl_khr_integer_dot_product", // implement through mad24 or 16-bit multiply
+        ]
+        
+        #if arch(arm64)
+        // TODO: Check whether default device supports 'Apple7' instead.
+        output.append("cl_APPLE_simdgroup_matrix")
+        #endif
+        return output
+    }()
+    
+    // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000: 996a022a7ad45583591df5e665af0f8f38b85e83
+    private static let _numericVersion: CLVersion = .init(major: 3, minor: 0, patch: 12)
+    
+    private static let _extensionsWithVersion: [CLNameVersion] =
+        _extensions.map { CLNameVersion(version: _numericVersion, name: $0) }
+    
     // OpenCL 1.0
     
-    @inline(__always)
-    var profile: String {
-        "FULL_PROFILE"
-    }
+    public var profile: String { "FULL_PROFILE" }
     
-    @inline(__always)
-    var version: String {
-        // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000: 996a022a7ad45583591df5e665af0f8f38b85e83
-        "OpenCL 3.0 (Sep 15 2022 21:00:00)"
-    }
+    public var version: String { Self._version }
     
-    @inline(__always)
-    var name: String {
-        "Apple"
-    }
+    public var name: String { "Apple" }
     
-    @inline(__always)
-    var vendor: String {
-        "Apple"
+    public var vendor: String { "Apple" }
+    
+    public var extensions: [String] { Self._extensions }
+    
+    // OpenCL 2.1
+    
+    // Safe to assume CPU timer is in nanoseconds, but not safe to assume GPU timer is in nanonseconds:
+    // https://developer.apple.com/documentation/metal/performance_tuning/correlating_cpu_and_gpu_timestamps
+    // Through experiments, GPU and CPU timer are perfectly synchronized on Apple silicon, and match
+    // the number of nanoseconds that have passed. However, granularity might be 41.67 ns on Apple
+    // silicon but 1 ns on Intel Macs: https://eclecticlight.co/2020/11/27/inside-m1-macs-time-and-logs/
+    public var hostTimerResolution: UInt64 {
+        var info = mach_timebase_info()
+        mach_timebase_info(&info)
+        return UInt64(info.numer / info.denom) // On Apple silicon, truncates 41.67 to 41.
     }
     
     // OpenCL 3.0
     
-    @inline(__always)
-    var numericVersion: CLVersion {
-        // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000: 996a022a7ad45583591df5e665af0f8f38b85e83
-        CLVersion(major: 3, minor: 0, patch: 12)
-    }
+    public var numericVersion: CLVersion { Self._numericVersion }
+    
+    // TODO: Determine what the 'version' in this 'cl_name_version' represents
+    public var extensionsWithVersion: [CLNameVersion] { Self._extensionsWithVersion }
 }
 
 // MARK: - C API
@@ -108,8 +152,8 @@ public func clGetPlatformInfo(
         // TODO: Implement
         return CL_INVALID_VALUE
     case CL_PLATFORM_HOST_TIMER_RESOLUTION:
-        // TODO: Implement
-        return CL_INVALID_VALUE
+        return writeInfo_Int(
+            param_value_size, param_value, param_value_size_ret, platform.hostTimerResolution)
     default:
         return CL_INVALID_VALUE
     }
