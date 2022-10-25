@@ -1,5 +1,5 @@
 //
-//  ValidateLibrary.swift
+//  main.swift
 //  
 //
 //  Created by Philip Turner on 10/23/22.
@@ -26,7 +26,18 @@ guard let symbol = symbol else {
 }
 print("Loaded symbol")
 
-typealias SymbolType = @convention(c) (Int32) -> Int32
+typealias SymbolType = @convention(c) (
+    UInt32, UnsafeMutablePointer<OpaquePointer?>?, UnsafeMutablePointer<UInt32>?) -> Int32
 let clGetPlatformIDs = unsafeBitCast(symbol, to: SymbolType.self)
-precondition(clGetPlatformIDs(2) == 2, "Function not working correctly")
-print("Function working correctly")
+
+var numPlatforms: UInt32 = 0
+_ = clGetPlatformIDs(0, nil, &numPlatforms)
+precondition(numPlatforms == 1, "Number of platforms not 1.")
+
+withUnsafeTemporaryAllocation(
+    of: OpaquePointer?.self, capacity: 1
+) { bufferPointer in
+    _ = clGetPlatformIDs(1, bufferPointer.baseAddress, nil)
+    precondition(bufferPointer[0] != nil, "Retrieved platform was nil.")
+}
+print("Successfully checked platforms")
