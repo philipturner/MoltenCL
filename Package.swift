@@ -34,5 +34,8 @@ let package = Package(
         .testTarget(
             name: "OpenCLTests",
             dependencies: ["OpenCL"]),
+        .testTarget(
+            name: "PerformanceTests",
+            dependencies: ["OpenCL"])
     ]
 )
