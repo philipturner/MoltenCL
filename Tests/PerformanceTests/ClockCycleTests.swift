@@ -3,19 +3,25 @@ import Metal
 
 final class ClockCycleTests: XCTestCase {
     func testThroughput() throws {
-        // Calibrated for M1 Max
+        guard Bundle.safeModule != nil else {
+            // Exclude from command-line builds
+            return
+        }
+        
         let device = MTLCreateSystemDefaultDevice()!
-        let library = try! device.makeDefaultLibrary(bundle: Bundle.module)
+        let library = try! device.makeDefaultLibrary(bundle: Bundle.safeModule!)
         let function = library.makeFunction(name: "testALU")!
         let pipeline = try! device.makeComputePipelineState(function: function)
         
-        let numThreads = 1_000_000
+        let numThreads = 10_000_000 // Calibrated for M1 Max
         let bufferSize = numThreads * MemoryLayout<UInt64>.stride
         let buffer = device.makeBuffer(length: bufferSize, options: .storageModeShared)!
         
         let commandQueue = device.makeCommandQueue()!
-        for _ in 0..<10 {
+        for _ in 0..<100 {
             memset(buffer.contents(), 0, bufferSize)
+            
+//            let start = Date()
             
             let cmdbuf = commandQueue.makeCommandBuffer()!
             let encoder = cmdbuf.makeComputeCommandEncoder()!
@@ -26,7 +32,9 @@ final class ClockCycleTests: XCTestCase {
             cmdbuf.commit()
             cmdbuf.waitUntilCompleted()
             
-            print(Int((cmdbuf.gpuEndTime - cmdbuf.gpuStartTime) * 1e6))
+//            let end = Date()
+            
+            print(Int((cmdbuf.gpuEndTime - cmdbuf.gpuStartTime) * 1e6))//, Int(end.timeIntervalSince(start) * 1e6))
         }
     }
 }

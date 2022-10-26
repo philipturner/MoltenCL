@@ -8,7 +8,7 @@
 #include <metal_stdlib>
 using namespace metal;
 
-typedef int FLOAT;
+typedef float FLOAT;
 
 // actual cycles = (result - 1200) / 4000
 // calibrate M1 Max (32c) = 1_000_000 dispatches
@@ -26,13 +26,53 @@ kernel void testALU(device int *in_place_buffer [[buffer(0)]],
     vec<FLOAT, 4> read_value2 = read_value * read_value;
     vec<FLOAT, 4> read_value3 = read_value * read_value2;
     
-    for (short i = 0; i < 1000; ++i) {
-//        read_value.xy = read_value.xy + read_value.zw;
-//        read_value.zw = read_value.xz + read_value.yw;
-//        read_value2.xy = read_value.xy + read_value2.zw;
-//        read_value2.zw = read_value2.xz + read_value.yw;
-//        read_value3.xy = read_value3.xy + read_value2.zw;
-//        read_value3.zw = read_value2.xz + read_value3.yw;
+#define BLOCK \
+read_value.xy = read_value.xy + (read_value.zw); \
+read_value.zw = read_value.xz + (read_value.yw); \
+read_value2.xy = read_value.xy + (read_value2.zw); \
+read_value2.zw = read_value2.xz + (read_value.yw); \
+read_value3.xy = read_value3.xy + (read_value2.zw); \
+read_value3.zw = read_value2.xz + (read_value3.yw); \
+
+//#define BLOCK \
+//read_value.xy = fma(read_value.xy, read_value.zw, read_value3.yz); \
+//read_value.zw = fma(read_value.xz, read_value.yw, read_value2.wx); \
+//read_value2.xy = fma(read_value.xy, read_value2.zw, read_value3.xw); \
+//read_value2.zw = fma(read_value2.xz, read_value.yw, read_value.xz); \
+//read_value3.xy = fma(read_value3.xy, read_value2.zw, read_value2.zx); \
+//read_value3.zw = fma(read_value2.xz, read_value3.yw, read_value.yy); \
+
+#define FIVE_BLOCK \
+BLOCK \
+BLOCK \
+BLOCK \
+BLOCK \
+BLOCK \
+
+#define FIFTY_BLOCK \
+\
+    FIVE_BLOCK \
+    FIVE_BLOCK \
+    FIVE_BLOCK \
+    FIVE_BLOCK \
+    FIVE_BLOCK \
+    \
+    FIVE_BLOCK \
+    FIVE_BLOCK \
+    FIVE_BLOCK \
+    FIVE_BLOCK \
+    FIVE_BLOCK \
+
+    FIFTY_BLOCK
+//    FIFTY_BLOCK
+    
+//    for (short i = 0; i < 10; ++i) {
+//        read_value.xy = read_value.xy + read_value.zw; \
+//        read_value.zw = read_value.xz + read_value.yw; \
+//        read_value2.xy = read_value.xy + read_value2.zw; \
+//        read_value2.zw = read_value2.xz + read_value.yw; \
+//        read_value3.xy = read_value3.xy + read_value2.zw; \
+//        read_value3.zw = read_value2.xz + read_value3.yw; \
 
 //        read_value.xy = read_value.xy * read_value.zw;
 //        read_value.zw = read_value.xz * read_value.yw;
@@ -69,13 +109,16 @@ kernel void testALU(device int *in_place_buffer [[buffer(0)]],
 //        read_value3.xy = mul24(read_value3.xy, read_value2.zw);
 //        read_value3.zw = mul24(read_value2.xz, read_value3.yw);
         
-//        read_value.xy = madhi(read_value.xy, read_value.zw, read_value3.yz);
-//        read_value.zw = madhi(read_value.xz, read_value.yw, read_value2.wx);
-//        read_value2.xy = madhi(read_value.xy, read_value2.zw, read_value3.xw);
-//        read_value2.zw = madhi(read_value2.xz, read_value.yw, read_value.xz);
-//        read_value3.xy = madhi(read_value3.xy, read_value2.zw, read_value2.zx);
-//        read_value3.zw = madhi(read_value2.xz, read_value3.yw, read_value.yy);
-    }
+//        read_value.xy = fma(read_value.xy, read_value.xy, read_value3.xy);
+//        read_value.zw = fma(read_value.zw, read_value.zw, read_value2.zw);
+        
+//        read_value.xy = fma(read_value.xy, read_value.zw, read_value3.yz);
+//        read_value.zw = fma(read_value.xz, read_value.yw, read_value2.wx);
+//        read_value2.xy = fma(read_value.xy, read_value2.zw, read_value3.xw);
+//        read_value2.zw = fma(read_value2.xz, read_value.yw, read_value.xz);
+//        read_value3.xy = fma(read_value3.xy, read_value2.zw, read_value2.zx);
+//        read_value3.zw = fma(read_value2.xz, read_value3.yw, read_value.yy);
+//    }
     
     FLOAT result = read_value[0] +  read_value[1] +  read_value[2] +  read_value[3]
                 + read_value2[0] + read_value2[1] + read_value2[2] + read_value2[3]

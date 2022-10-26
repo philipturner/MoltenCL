@@ -36,6 +36,9 @@ let package = Package(
             dependencies: ["OpenCL"]),
         .testTarget(
             name: "PerformanceTests",
-            dependencies: ["OpenCL"])
+            dependencies: ["OpenCL"],
+            resources: [
+                .copy("ClockCycleTests.metal")
+            ])
     ]
 )
