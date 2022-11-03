@@ -99,8 +99,10 @@ func writeInfo_ArrayOfCLNameVersion(
     for element in value {
       precondition(
         element.name.count < CL_NAME_VERSION_MAX_NAME_SIZE,
-        "Null-terminated string exceeds maximum size \(CL_NAME_VERSION_MAX_NAME_SIZE)."
-      )
+        """
+        Null-terminated string exceeds maximum size
+        \(CL_NAME_VERSION_MAX_NAME_SIZE).
+        """)
       let version_ptr = byteStream.assumingMemoryBound(to: UInt32.self)
       let name_ptr = (byteStream + nameOffset).assumingMemoryBound(
         to: CChar.self)

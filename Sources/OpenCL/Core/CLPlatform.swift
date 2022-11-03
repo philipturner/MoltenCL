@@ -11,16 +11,18 @@ import Metal
 public class CLPlatform {
   // Internal so the user can't generate a custom platform.
   internal init() {
-    // A device representing all GPUs on the platform. Either the universal system device (M1) or
-    // one of many Mac2 GPUs on an Intel Mac. We only use this device to query GPU family.
+    // A device representing all GPUs on the platform. Either the universal
+    // system device (M1) or one of many Mac2 GPUs on an Intel Mac. We only use
+    // this device to query GPU family.
     let device = MTLCopyAllDevices().first!
     // MTLCreateSystemDefaultDevice() fails in command-line scripts, so use
     // MTLCopyAllDevices() instead.
 
-    // Apple6 supports SIMD permute, but not SIMD reductions. The OpenCL specification seems to
-    // demand supporting SIMD reductions if you support anything SIMD at all. That makes it
-    // time-consuming to determine how to support Apple6. I also don't have an Apple6 device to
-    // test. Therefore, MoltenCL does not support Apple6.
+    // Apple6 supports SIMD permute, but not SIMD reductions. The OpenCL
+    // specification seems to demand supporting SIMD reductions if you support
+    // anything SIMD at all. That makes it time-consuming to determine how to
+    // support Apple6. I also don't have an Apple6 device to test. Therefore,
+    // MoltenCL does not support Apple6.
     if device.supportsFamily(.apple6) && !device.supportsFamily(.apple7) {
       fatalError("A13 is not compatible with MoltenCL.")
     }
@@ -33,19 +35,21 @@ public class CLPlatform {
 
   public static let `default` = CLPlatform()
 
-  // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000: 996a022a7ad45583591df5e665af0f8f38b85e83
+  // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000:
+  // 996a022a7ad45583591df5e665af0f8f38b85e83
   private static let _version: String = "OpenCL 3.0 (Sep 15 2022 21:00:00)"
 
   private static let _extensions: [String] = _extensionsWithVersion.map(\.name)
 
-  // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000: 996a022a7ad45583591df5e665af0f8f38b85e83
+  // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000:
+  // 996a022a7ad45583591df5e665af0f8f38b85e83
   private static let _numericVersion: CLVersion = .init(
     major: 3, minor: 0, patch: 12)
 
   private static let _extensionsWithVersion: [CLNameVersion] = {
     () -> [CLNameVersion] in
-    // Versioning is mostly for provisional extensions and the DP4a instruction. MoltenCL does
-    // not support any extensions with a version other than 1.0.0.
+    // Versioning is mostly for provisional extensions and the DP4a instruction.
+    // MoltenCL does not support any extensions with a version other than 1.0.0.
     let _1_0_0 = CLVersion(major: 1, minor: 0, patch: 0)
 
     var output: [(CLVersion, String)] = [
@@ -54,21 +58,23 @@ public class CLPlatform {
       (_1_0_0, "cl_khr_create_command_queue"),
       (_1_0_0, "cl_khr_depth_images"),
 
-      // OpenCL 2.0 requires exposing `MTLIndirectCommandBuffer` to the shader code.
+      // OpenCL 2.0 requires exposing `MTLIndirectCommandBuffer` to the shader
+      // code.
       (_1_0_0, "cl_khr_device_enqueue_local_arg_types"),
 
-      // Use `MTLDevice.registryID` for a unique 8-byte ID, zero out the remaining bytes.
+      // Use `MTLDevice.registryID` for a unique 8-byte ID, zero out the
+      // remaining bytes.
       (_1_0_0, "cl_khr_device_uuid"),
       (_1_0_0, "cl_khr_extended_bit_ops"),
       (_1_0_0, "cl_khr_extended_versioning"),
 
-      // `__builtin_expect` and `__builtin_assume` are callable from MSL, just need to
-      // determine how they map to AIR
+      // `__builtin_expect` and `__builtin_assume` are callable from MSL, just
+      // need to determine how they map to AIR
       (_1_0_0, "cl_khr_expect_assume"),
       (_1_0_0, "cl_khr_fp16"),
 
-      // Need to finish the 'metal-float64' library, which emulates FP64 on Apple silicon. If
-      // possible, utilize native FP64 on AMD GPUs.
+      // Need to finish the 'metal-float64' library, which emulates FP64 on
+      // Apple silicon. If possible, utilize native FP64 on AMD GPUs.
       (_1_0_0, "cl_khr_fp64"),
       (_1_0_0, "cl_khr_global_int32_base_atomics"),
       (_1_0_0, "cl_khr_global_int32_extended_atomics"),
@@ -81,16 +87,17 @@ public class CLPlatform {
       (_1_0_0, "cl_khr_spir"),
       (_1_0_0, "cl_khr_srgb_image_writes"),
 
-      // Original subgroup functions from `cl_khr_subgroups` are supposed to be forbidden
-      // inside non-uniform control flow. However, I have no idea how to enforce this. What
-      // happens when you enter such a function, with non-uniform control flow? Does the
-      // compiler prevent it, or are the results just undefined? MoltenCL will make no
-      // distinction between the uniform and non-uniform versions of these functions.
+      // Original subgroup functions from `cl_khr_subgroups` are supposed to be
+      // forbidden inside non-uniform control flow. However, I have no idea how
+      // to enforce this. What happens when you enter such a function, with
+      // non-uniform control flow? Does the compiler prevent it, or are the
+      // results just undefined? MoltenCL will make no distinction between the
+      // uniform and non-uniform versions of these functions.
       (_1_0_0, "cl_khr_subgroups"),
       (_1_0_0, "cl_khr_subgroup_ballot"),
 
-      // Specification forces cluster size to be compile-time constant, so we can implement
-      // sizes other than {4, simd_size} through emulation.
+      // Specification forces cluster size to be compile-time constant, so we
+      // can implement sizes other than {4, simd_size} through emulation.
       (_1_0_0, "cl_khr_subgroup_clustered_reduce"),
       (_1_0_0, "cl_khr_subgroup_extended_types"),
       (_1_0_0, "cl_khr_subgroup_named_barrier"),
@@ -102,9 +109,10 @@ public class CLPlatform {
       (_1_0_0, "cl_khr_terminate_context"),
     ]
 
-    // Deviating from Apple's convention of capitalizing the word after `cl_`. For example,
-    // Apple would have named these `cl_APPLE_subgroup_matrix`, etc. MoltenCL uses lowercase to
-    // be more in-line with how other vendors name extensions (e.g. `cl_intel_...`).
+    // Deviating from Apple's convention of capitalizing the word after `cl_`.
+    // For example, Apple would have named these `cl_APPLE_subgroup_matrix`,
+    // etc. MoltenCL uses lowercase to be more in-line with how other vendors
+    // name extensions (e.g. `cl_intel_...`).
     let device = MTLCreateSystemDefaultDevice()!
     if device.supportsFamily(.apple7) {
       // SIMD-scoped matrix multiply operations
@@ -131,11 +139,14 @@ public class CLPlatform {
 
   // OpenCL 2.1
 
-  // Safe to assume CPU timer is in nanoseconds, but not safe to assume GPU timer is in nanonseconds:
+  // Safe to assume CPU timer is in nanoseconds, but not safe to assume GPU
+  // timer is in nanonseconds:
   // https://developer.apple.com/documentation/metal/performance_tuning/correlating_cpu_and_gpu_timestamps
-  // Through experiments, GPU and CPU timer are perfectly synchronized on Apple silicon, and match
-  // the number of nanoseconds that have passed. However, granularity might be 41.67 ns on Apple
-  // silicon but 1 ns on Intel Macs: https://eclecticlight.co/2020/11/27/inside-m1-macs-time-and-logs/
+  //
+  // Through experiments, GPU and CPU timer are perfectly synchronized on Apple
+  // silicon, and match the number of nanoseconds that have passed. However,
+  // granularity might be 41.67 ns on Apple silicon but 1 ns on Intel Macs:
+  // https://eclecticlight.co/2020/11/27/inside-m1-macs-time-and-logs/
   public var hostTimerResolution: UInt64 {
     var info = mach_timebase_info()
     mach_timebase_info(&info)
@@ -148,7 +159,8 @@ public class CLPlatform {
 
   public var numericVersion: CLVersion { Self._numericVersion }
 
-  // Returns the extensions with their version from the OpenCL Extension Specification.
+  // Returns the extensions with their version from the OpenCL Extension
+  // Specification.
   public var extensionsWithVersion: [CLNameVersion] {
     Self._extensionsWithVersion
   }
