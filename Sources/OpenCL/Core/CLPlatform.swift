@@ -6,12 +6,28 @@
 //
 
 import COpenCL
+import Metal
 import Foundation
 
 public class CLPlatform {
     // Internal so the user can't generate a custom platform.
     internal init() {
+        // A device representing all GPUs on the platform. Either the universal system device (M1) or
+        // one of many Mac2 GPUs on an Intel Mac. We only use this device to query GPU family.
+        let device = MTLCreateSystemDefaultDevice()!
         
+        // Apple6 supports SIMD permute, but not SIMD reductions. The OpenCL specification seems to
+        // demand supporting SIMD reductions if you support anything SIMD at all. That makes it
+        // time-consuming to determine how to support Apple6. I also don't have an Apple6 device to
+        // test. Therefore, MoltenCL does not support Apple6.
+        if device.supportsFamily(.apple6) && !device.supportsFamily(.apple7) {
+            fatalError("A13 is not compatible with MoltenCL.")
+        }
+        
+        // Only Apple7+ and Mac2 devices pass this test.
+        guard device.supportsFamily(.metal3) else {
+            fatalError("Metal device '\(device.name)' does not support Metal 3.")
+        }
     }
     
     public static let `default` = CLPlatform()
@@ -19,65 +35,84 @@ public class CLPlatform {
     // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000: 996a022a7ad45583591df5e665af0f8f38b85e83
     private static let _version: String = "OpenCL 3.0 (Sep 15 2022 21:00:00)"
     
-    private static let _extensions: [String] = { () -> [String] in
-        var output: [String] = [
-            // If I don't yet know whether an extension is possible, it is commented out.
-            "cl_khr_3d_image_writes",
-//            "cl_khr_async_work_group_copy_fence",
-            "cl_khr_byte_addressable_store",
-            "cl_khr_create_command_queue",
-            "cl_khr_depth_images",
-//            "cl_khr_device_enqueue_local_arg_types",
-            "cl_khr_device_uuid",
-            "cl_khr_extended_async_copies",
-            "cl_khr_extended_bit_ops",
-            "cl_khr_extended_versioning",
-            "cl_khr_expect_assume",
-            "cl_khr_fp16",
-            "cl_khr_fp64",
-            "cl_khr_global_int32_base_atomics",
-            "cl_khr_global_int32_extended_atomics",
-            "cl_khr_il_program",
-            "cl_khr_image2d_from_buffer",
-//            "cl_khr_initialize_memory",
-            "cl_khr_local_int32_base_atomics",
-            "cl_khr_local_int32_extended_atomics",
-            "cl_khr_integer_dot_product", // implement through mad24 (16-bit dot), 16-bit multiply (8-bit dot)
-            "cl_khr_mipmap_image",
-            "cl_khr_mipmap_image_writes",
-//            "cl_khr_priority_hints",
-            "cl_khr_spir", // sort of deprecated, but not a good idea to exclude
-            "cl_khr_srgb_image_writes",
-            "cl_khr_subgroups",
-            "cl_khr_subgroup_ballot",
-            // Specification forces cluster size to be compile-time constant, so we can implement
-            // sizes other than {4, simd_size} through emulation.
-            "cl_khr_subgroup_clustered_reduce",
-            "cl_khr_subgroup_extended_types",
-//            "cl_khr_subgroup_named_barrier",
-            "cl_khr_subgroup_non_uniform_arithmetic",
-            "cl_khr_subgroup_non_uniform_vote",
-            "cl_khr_subgroup_rotate",
-            "cl_khr_subgroup_shuffle",
-            "cl_khr_subgroup_shuffle_relative",
-//            "cl_khr_suggested_local_work_size", // Apple7 GPU cores execute 256 threads per clockxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        ]
-        
-        #if arch(arm64)
-        // SIMD-scoped matrix multiply operations (`simdgroup_matrix`)
-        output.append("cl_APPLE_subgroup_matrix")
-        #endif
-//        if Apple8 <- TODO: Test on my A15 device
-        // SIMD shift and fill
-//        output.append("cl_APPLE_subgroup_shuffle_and_fill")
-        return output
-    }()
+    private static let _extensions: [String] = _extensionsWithVersion.map(\.name)
     
     // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000: 996a022a7ad45583591df5e665af0f8f38b85e83
     private static let _numericVersion: CLVersion = .init(major: 3, minor: 0, patch: 12)
     
-    private static let _extensionsWithVersion: [CLNameVersion] =
-        _extensions.map { CLNameVersion(version: _numericVersion, name: $0) }
+    private static let _extensionsWithVersion: [CLNameVersion] = { () -> [CLNameVersion] in
+        // Versioning is mostly for provisional extensions and the DP4a instruction. MoltenCL does
+        // not support any extensions with a version other than 1.0.0.
+        let _1_0_0 = CLVersion(major: 1, minor: 0, patch: 0)
+        
+        var output: [(CLVersion, String)] = [
+            (_1_0_0, "cl_khr_3d_image_writes"),
+            (_1_0_0, "cl_khr_byte_addressable_store"),
+            (_1_0_0, "cl_khr_create_command_queue"),
+            (_1_0_0, "cl_khr_depth_images"),
+            
+            // OpenCL 2.0 requires exposing `MTLIndirectCommandBuffer` to the shader code.
+            (_1_0_0, "cl_khr_device_enqueue_local_arg_types"),
+            
+            // Use `MTLDevice.registryID` for a unique 8-byte ID, zero out the remaining bytes.
+            (_1_0_0, "cl_khr_device_uuid"),
+            (_1_0_0, "cl_khr_extended_bit_ops"),
+            (_1_0_0, "cl_khr_extended_versioning"),
+            
+            // `__builtin_expect` and `__builtin_assume` are callable from MSL, just need to
+            // determine how they may to AIR
+            (_1_0_0, "cl_khr_expect_assume"),
+            (_1_0_0, "cl_khr_fp16"),
+            
+            // Need to finish the 'metal-float64' library, which emulates FP64 on Apple silicon. If
+            // possible, utilize native FP64 on AMD GPUs.
+            (_1_0_0, "cl_khr_fp64"),
+            (_1_0_0, "cl_khr_global_int32_base_atomics"),
+            (_1_0_0, "cl_khr_global_int32_extended_atomics"),
+            (_1_0_0, "cl_khr_il_program"),
+            (_1_0_0, "cl_khr_image2d_from_buffer"),
+            (_1_0_0, "cl_khr_local_int32_base_atomics"),
+            (_1_0_0, "cl_khr_local_int32_extended_atomics"),
+            (_1_0_0, "cl_khr_mipmap_image"),
+            (_1_0_0, "cl_khr_mipmap_image_writes"),
+            (_1_0_0, "cl_khr_spir"),
+            (_1_0_0, "cl_khr_srgb_image_writes"),
+            
+            // Original subgroup functions from `cl_khr_subgroups` are supposed to be forbidden
+            // inside non-uniform control flow. However, I have no idea how to enforce this. What
+            // happens when you enter such a function, with non-uniform control flow? Does the
+            // compiler prevent it, or are the results just undefined? MoltenCL will make no
+            // distinction between the uniform and non-uniform versions of these functions.
+            (_1_0_0, "cl_khr_subgroups"),
+            (_1_0_0, "cl_khr_subgroup_ballot"),
+            
+            // Specification forces cluster size to be compile-time constant, so we can implement
+            // sizes other than {4, simd_size} through emulation.
+            (_1_0_0, "cl_subgroup_clustered_reduce"),
+            (_1_0_0, "cl_khr_subgroup_extended_types"),
+            (_1_0_0, "cl_khr_subgroup_named_barrier"),
+            (_1_0_0, "cl_khr_subgroup_non_uniform_arithmetic"),
+            (_1_0_0, "cl_khr_subgroup_non_uniform_vote"),
+            (_1_0_0, "cl_khr_subgroup_rotate"),
+            (_1_0_0, "cl_khr_subgroup_shuffle"),
+            (_1_0_0, "cl_khr_subgroup_shuffle_relative"),
+            (_1_0_0, "cl_khr_terminate_context"),
+        ]
+        
+        // Deviating from Apple's convention of capitalizing the word after `cl_`. For example,
+        // Apple would have named these `cl_APPLE_subgroup_matrix`, etc. MoltenCL uses lowercase to
+        // be more in-line with how other vendors name extensions (e.g. `cl_intel_...`).
+        let device = MTLCreateSystemDefaultDevice()!
+        if device.supportsFamily(.apple7) {
+            // SIMD-scoped matrix multiply operations
+            output.append((_1_0_0, "cl_apple_subgroup_matrix"))
+        }
+        if device.supportsFamily(.apple8) {
+            // SIMD shift and fill
+            output.append((_1_0_0, "cl_apple_subgroup_shuffle_and_fill"))
+        }
+        return output.map { CLNameVersion(version: $0.0, name: $0.1) }
+    }()
     
     // OpenCL 1.0
     
@@ -108,7 +143,7 @@ public class CLPlatform {
     
     public var numericVersion: CLVersion { Self._numericVersion }
     
-    // TODO: Determine what the 'version' in this 'cl_name_version' represents
+    // Returns the extensions with their version from the OpenCL Extension Specification.
     public var extensionsWithVersion: [CLNameVersion] { Self._extensionsWithVersion }
 }
 
