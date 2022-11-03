@@ -61,7 +61,7 @@ extension CLVersion {
   @usableFromInline static let patchMask: UInt32 = 1 << patchBits - 1
   
   @inlinable
-  init(version: cl_version) {
+  public init(version: cl_version) {
     major = version
     minor = version
     var patch = version
@@ -77,7 +77,7 @@ extension CLVersion {
   }
   
   @inlinable
-  var version: cl_version {
+  public var version: cl_version {
     // Unwrapping of `patch` could induce a 1-cycle overhead, so waiting to
     // vectorize until later.
     var majorMask = major << (Self.minorBits + Self.patchBits)
