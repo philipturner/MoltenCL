@@ -125,6 +125,15 @@ public class CLPlatform {
     return output.map { CLNameVersion(version: $0.0, name: $0.1) }
   }()
 
+  private static let _devices: [CLDevice] = {
+    let mtlDevices = MTLCopyAllDevices()
+    return mtlDevices.map(CLDevice.init(mtlDevice:))
+  }()
+
+  // public static func devices(type: CLDeviceType)
+}
+
+extension CLPlatform {
   // OpenCL 1.0
 
   public var profile: String { "FULL_PROFILE" }
