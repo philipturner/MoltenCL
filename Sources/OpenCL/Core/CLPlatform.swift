@@ -14,7 +14,9 @@ public class CLPlatform {
     internal init() {
         // A device representing all GPUs on the platform. Either the universal system device (M1) or
         // one of many Mac2 GPUs on an Intel Mac. We only use this device to query GPU family.
-        let device = MTLCreateSystemDefaultDevice()!
+        let device = MTLCopyAllDevices().first!
+        // MTLCreateSystemDefaultDevice() fails in command-line scripts, so use
+        // MTLCopyAllDevices() instead.
         
         // Apple6 supports SIMD permute, but not SIMD reductions. The OpenCL specification seems to
         // demand supporting SIMD reductions if you support anything SIMD at all. That makes it
@@ -88,7 +90,7 @@ public class CLPlatform {
             
             // Specification forces cluster size to be compile-time constant, so we can implement
             // sizes other than {4, simd_size} through emulation.
-            (_1_0_0, "cl_subgroup_clustered_reduce"),
+            (_1_0_0, "cl_khr_subgroup_clustered_reduce"),
             (_1_0_0, "cl_khr_subgroup_extended_types"),
             (_1_0_0, "cl_khr_subgroup_named_barrier"),
             (_1_0_0, "cl_khr_subgroup_non_uniform_arithmetic"),
@@ -194,7 +196,7 @@ public func clGetPlatformInfo(
             param_value_size, param_value, param_value_size_ret, platform.version)
     case CL_PLATFORM_NUMERIC_VERSION:
         return writeInfo_Int(
-            param_value_size, param_value, param_value_size_ret, platform.numericVersion)
+            param_value_size, param_value, param_value_size_ret, platform.numericVersion.version)
     case CL_PLATFORM_NAME:
         return writeInfo_String(
             param_value_size, param_value, param_value_size_ret, platform.name)
@@ -202,11 +204,11 @@ public func clGetPlatformInfo(
         return writeInfo_String(
             param_value_size, param_value, param_value_size_ret, platform.vendor)
     case CL_PLATFORM_EXTENSIONS:
-        // TODO: Implement
-        return CL_INVALID_VALUE
+        return writeInfo_ArrayOfString(
+            param_value_size, param_value, param_value_size_ret, platform.extensions)
     case CL_PLATFORM_EXTENSIONS_WITH_VERSION:
-        // TODO: Implement
-        return CL_INVALID_VALUE
+        return writeInfo_ArrayOfCLNameVersion(
+            param_value_size, param_value, param_value_size_ret, platform.extensionsWithVersion)
     case CL_PLATFORM_HOST_TIMER_RESOLUTION:
         return writeInfo_Int(
             param_value_size, param_value, param_value_size_ret, platform.hostTimerResolution)
