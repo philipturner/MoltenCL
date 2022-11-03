@@ -7,7 +7,6 @@
 
 import COpenCL
 import Metal
-import Foundation
 
 public class CLPlatform {
     // Internal so the user can't generate a custom platform.
