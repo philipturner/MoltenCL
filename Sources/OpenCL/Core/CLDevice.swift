@@ -64,5 +64,31 @@ public func clGetDeviceIDs(
   let platform: CLPlatform = Unmanaged.fromOpaque(.init(clPlatform))
     .takeUnretainedValue()
 
+  let type = CLDeviceType(rawValue: device_type)
+  if type != .all && type.contains(.custom) {
+    guard type == [] else {
+      return CL_INVALID_DEVICE_TYPE
+    }
+  }
+  let clDevices = platform.devices(type: type)
+  guard clDevices.count > 0 else {
+    return CL_DEVICE_NOT_FOUND
+  }
+
+  if devices == nil, num_devices == nil {
+    return CL_INVALID_VALUE
+  }
+  if let devices = devices {
+    guard num_entries > 0 else {
+      return CL_INVALID_VALUE
+    }
+    for i in 0..<min(Int(num_entries), clDevices.count) {
+      let clDevice = clDevices[i]
+      devices[i] = .init(Unmanaged.passUnretained(clDevice).toOpaque())
+    }
+  }
+  if let num_devices = num_devices {
+    num_devices.pointee = UInt32(clDevices.count)
+  }
   return CL_SUCCESS
 }

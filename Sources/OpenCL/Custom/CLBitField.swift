@@ -18,6 +18,7 @@ extension CLMacro {
 
 protocol CLEnum: CLMacro, CaseIterable {}
 
+// Setting unused zones of any bitfield to 1 causes undefined behavior.
 protocol CLBitField: CLMacro, OptionSet {}
 extension CLBitField {
   init(

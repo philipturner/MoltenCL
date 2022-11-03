@@ -35,6 +35,9 @@ public class CLPlatform {
 
   public static let `default` = CLPlatform()
 
+  // A list of all available platforms.
+  public static let all: [CLPlatform] = [`default`]
+
   // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000:
   // 996a022a7ad45583591df5e665af0f8f38b85e83
   private static let _version: String = "OpenCL 3.0 (Sep 15 2022 21:00:00)"
@@ -125,12 +128,24 @@ public class CLPlatform {
     return output.map { CLNameVersion(version: $0.0, name: $0.1) }
   }()
 
+  // Static member because it's only used internally.
   private static let _devices: [CLDevice] = {
     let mtlDevices = MTLCopyAllDevices()
     return mtlDevices.map(CLDevice.init(mtlDevice:))
   }()
 
-  // public static func devices(type: CLDeviceType)
+  // Instance member, not static member, because `clGetDeviceIDs` operates on an
+  // instance of `cl_platform_id`.
+  public func devices(type: CLDeviceType) -> [CLDevice] {
+    if type == .all || type.intersection([.cpu, .accelerator, .custom]) == [] {
+      if type.contains(.gpu) {
+        return CLPlatform._devices
+      } else if type.contains(.default) {
+        return [CLDevice.default]
+      }
+    }
+    return []
+  }
 }
 
 extension CLPlatform {
