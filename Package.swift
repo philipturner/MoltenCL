@@ -39,6 +39,8 @@ let package = Package(
     .testTarget(
       name: "OpenCLTests",
       dependencies: ["OpenCL"]),
+
+    // TODO: Move benchmarks into their own executable.
     .testTarget(
       name: "PerformanceTests",
       dependencies: ["OpenCL"],

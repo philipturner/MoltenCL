@@ -3,7 +3,7 @@ import OpenCL
 import XCTest
 
 final class OpenCLTests: XCTestCase {
-  func testExample() throws {
+  func testCLPlatform() throws {
     // clGetPlatformIDs
 
     var numPlatforms: UInt32 = 0
@@ -20,6 +20,22 @@ final class OpenCLTests: XCTestCase {
     }
     guard let platform = platform else {
       fatalError("This should never happen.")
+    }
+
+    // CL_PLATFORM_NAME
+
+    var nameSize: Int = 0
+    clGetPlatformInfo(platform, UInt32(CL_PLATFORM_NAME), 0, nil, &nameSize)
+    XCTAssertGreaterThan(nameSize, 0)
+
+    withUnsafeTemporaryAllocation(
+      of: CChar.self, capacity: nameSize
+    ) { bufferPointer in
+      clGetPlatformInfo(
+        platform, UInt32(CL_PLATFORM_NAME), nameSize,
+        bufferPointer.baseAddress, nil)
+      let nameString = String(validatingUTF8: bufferPointer.baseAddress!)!
+      XCTAssertEqual(nameString, "Apple")
     }
 
     // CL_PLATFORM_EXTENSIONS

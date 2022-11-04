@@ -55,7 +55,8 @@ public class CLPlatform {
     // MoltenCL does not support any extensions with a version other than 1.0.0.
     let _1_0_0 = CLVersion(major: 1, minor: 0, patch: 0)
 
-    var output: [(CLVersion, String)] = [
+    // Commented out extensions may be implemented in the future.
+    var extensions: [(CLVersion, String)] = [
       (_1_0_0, "cl_khr_3d_image_writes"),
       (_1_0_0, "cl_khr_byte_addressable_store"),
       (_1_0_0, "cl_khr_create_command_queue"),
@@ -67,7 +68,7 @@ public class CLPlatform {
 
       // Use `MTLDevice.registryID` for a unique 8-byte ID, zero out the
       // remaining bytes.
-      (_1_0_0, "cl_khr_device_uuid"),
+      //      (_1_0_0, "cl_khr_device_uuid"),
       (_1_0_0, "cl_khr_extended_bit_ops"),
       (_1_0_0, "cl_khr_extended_versioning"),
 
@@ -78,7 +79,7 @@ public class CLPlatform {
 
       // Need to finish the 'metal-float64' library, which emulates FP64 on
       // Apple silicon. If possible, utilize native FP64 on AMD GPUs.
-      (_1_0_0, "cl_khr_fp64"),
+      //      (_1_0_0, "cl_khr_fp64"),
       (_1_0_0, "cl_khr_global_int32_base_atomics"),
       (_1_0_0, "cl_khr_global_int32_extended_atomics"),
       (_1_0_0, "cl_khr_il_program"),
@@ -101,7 +102,7 @@ public class CLPlatform {
 
       // Specification forces cluster size to be compile-time constant, so we
       // can implement sizes other than {4, simd_size} through emulation.
-      (_1_0_0, "cl_khr_subgroup_clustered_reduce"),
+      //      (_1_0_0, "cl_khr_subgroup_clustered_reduce"),
       (_1_0_0, "cl_khr_subgroup_extended_types"),
       (_1_0_0, "cl_khr_subgroup_named_barrier"),
       (_1_0_0, "cl_khr_subgroup_non_uniform_arithmetic"),
@@ -109,7 +110,7 @@ public class CLPlatform {
       (_1_0_0, "cl_khr_subgroup_rotate"),
       (_1_0_0, "cl_khr_subgroup_shuffle"),
       (_1_0_0, "cl_khr_subgroup_shuffle_relative"),
-      (_1_0_0, "cl_khr_terminate_context"),
+      //      (_1_0_0, "cl_khr_terminate_context"),
     ]
 
     // Deviating from Apple's convention of capitalizing the word after `cl_`.
@@ -119,13 +120,13 @@ public class CLPlatform {
     let device = MTLCreateSystemDefaultDevice()!
     if device.supportsFamily(.apple7) {
       // SIMD-scoped matrix multiply operations
-      output.append((_1_0_0, "cl_apple_subgroup_matrix"))
+      extensions.append((_1_0_0, "cl_apple_subgroup_matrix"))
     }
     if device.supportsFamily(.apple8) {
       // SIMD shift and fill
-      output.append((_1_0_0, "cl_apple_subgroup_shuffle_and_fill"))
+      extensions.append((_1_0_0, "cl_apple_subgroup_shuffle_and_fill"))
     }
-    return output.map { CLNameVersion(version: $0.0, name: $0.1) }
+    return extensions.map { CLNameVersion(version: $0.0, name: $0.1) }
   }()
 
   // Static member because it's only used internally.
@@ -149,11 +150,11 @@ public class CLPlatform {
 }
 
 extension CLPlatform {
-  // OpenCL 1.0
-
   public var profile: String { "FULL_PROFILE" }
 
   public var version: String { Self._version }
+
+  public var numericVersion: CLVersion { Self._numericVersion }
 
   public var name: String { "Apple" }
 
@@ -161,7 +162,11 @@ extension CLPlatform {
 
   public var extensions: [String] { Self._extensions }
 
-  // OpenCL 2.1
+  // Returns the extensions with their version from the OpenCL Extension
+  // Specification.
+  public var extensionsWithVersion: [CLNameVersion] {
+    Self._extensionsWithVersion
+  }
 
   // Safe to assume CPU timer is in nanoseconds, but not safe to assume GPU
   // timer is in nanonseconds:
@@ -177,16 +182,6 @@ extension CLPlatform {
 
     // On Apple silicon, truncates 41.67 to 41.
     return UInt64(info.numer / info.denom)
-  }
-
-  // OpenCL 3.0
-
-  public var numericVersion: CLVersion { Self._numericVersion }
-
-  // Returns the extensions with their version from the OpenCL Extension
-  // Specification.
-  public var extensionsWithVersion: [CLNameVersion] {
-    Self._extensionsWithVersion
   }
 }
 
@@ -230,6 +225,17 @@ public func clGetPlatformInfo(
   let platform: CLPlatform = Unmanaged.fromOpaque(.init(clPlatform))
     .takeUnretainedValue()
 
+  //  @inline(__always)
+  //  func writeInfo2<T: CLInfoProtocol>(_ value: T.Element, type: T.Type = T.self) -> Int32 {
+  //    return T(value).writeInfo(
+  //      param_value_size, param_value, param_value_size_ret)
+  //  }
+
+  @inline(__always)
+  func writeInfo<T: CLInfo>(_ value: T) -> Int32 {
+    value.writeInfo(param_value_size, param_value, param_value_size_ret)
+  }
+
   switch Int32(bitPattern: param_name) {
   case CL_PLATFORM_PROFILE:
     return writeInfo_String(
@@ -242,14 +248,14 @@ public func clGetPlatformInfo(
       param_value_size, param_value, param_value_size_ret,
       platform.numericVersion.version)
   case CL_PLATFORM_NAME:
-    return writeInfo_String(
-      param_value_size, param_value, param_value_size_ret, platform.name)
+    return writeInfo(platform.name)
+  //    return writeInfo_String(
+  //      param_value_size, param_value, param_value_size_ret, platform.name)
   case CL_PLATFORM_VENDOR:
     return writeInfo_String(
       param_value_size, param_value, param_value_size_ret, platform.vendor)
   case CL_PLATFORM_EXTENSIONS:
-    return writeInfo_ArrayOfString(
-      param_value_size, param_value, param_value_size_ret, platform.extensions)
+    return writeInfo(platform.extensions)
   case CL_PLATFORM_EXTENSIONS_WITH_VERSION:
     return writeInfo_ArrayOfCLNameVersion(
       param_value_size, param_value, param_value_size_ret,

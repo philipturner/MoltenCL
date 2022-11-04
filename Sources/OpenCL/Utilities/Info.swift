@@ -7,6 +7,69 @@
 
 import COpenCL
 
+// Internal protocol for serializing data.
+protocol CLInfo {
+  // Instance function instead of static function, to simplify nested
+  // `writeInfo` functions.
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32
+
+  // Workaround for fact that arrays can't have multiple conformances.
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32
+}
+
+extension Array: CLInfo where Element: CLInfo {
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32 {
+    Element.writeInfo_Array(
+      param_value_size, param_value, param_value_size_ret, self)
+  }
+
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32 {
+    fatalError("\(#function) not implemented.")
+  }
+}
+
+// MARK: - Conformances
+
+extension String: CLInfo {
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32 {
+    writeInfo_String(param_value_size, param_value, param_value_size_ret, self)
+  }
+
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32 {
+    writeInfo_ArrayOfString(
+      param_value_size, param_value, param_value_size_ret, value)
+  }
+}
+
+// MARK: - Implementations
+
 func writeInfo_Int<T: BinaryInteger>(
   _ param_value_size: Int,
   _ param_value: UnsafeMutableRawPointer?,
@@ -44,6 +107,25 @@ func writeInfo_String(
     }
     return CL_SUCCESS
   }
+}
+
+func writeInfo_ArrayOfInt<T: BinaryInteger>(
+  _ param_value_size: Int,
+  _ param_value: UnsafeMutableRawPointer?,
+  _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+  _ value: [T]
+) -> Int32 {
+  let value_size = value.count * MemoryLayout<T>.stride
+  if let param_value_size_ret = param_value_size_ret {
+    param_value_size_ret.pointee = value_size
+  }
+  if let param_value = param_value {
+    if param_value_size < value_size {
+      return CL_INVALID_VALUE
+    }
+    memcpy(param_value, value, value_size)
+  }
+  return CL_SUCCESS
 }
 
 func writeInfo_ArrayOfString(
