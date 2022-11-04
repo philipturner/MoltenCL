@@ -36,6 +36,9 @@ let package = Package(
     .executableTarget(
       name: "ValidateLibrary",
       dependencies: []),
+
+    // TODO: Include test that downloads Khronos conformance tests.
+    // Use these for the bulk of validation, rather than writing custom tests.
     .testTarget(
       name: "OpenCLTests",
       dependencies: ["OpenCL"]),

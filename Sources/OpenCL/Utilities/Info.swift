@@ -42,11 +42,113 @@ extension Array: CLInfo where Element: CLInfo {
     _ param_value_size_ret: UnsafeMutablePointer<Int>?,
     _ value: [Self]
   ) -> Int32 {
-    fatalError("\(#function) not implemented.")
+    notImplementedError()
   }
 }
 
-// MARK: - Conformances
+// MARK: - Integer Conformances
+
+extension Int: CLInfo {
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32 {
+    writeInfo_Int(param_value_size, param_value, param_value_size_ret, self)
+  }
+
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32 {
+    writeInfo_ArrayOfInt(
+      param_value_size, param_value, param_value_size_ret, value)
+  }
+}
+
+extension Int32: CLInfo {
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32 {
+    writeInfo_Int(param_value_size, param_value, param_value_size_ret, self)
+  }
+
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32 {
+    writeInfo_ArrayOfInt(
+      param_value_size, param_value, param_value_size_ret, value)
+  }
+}
+
+extension UInt32: CLInfo {
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32 {
+    writeInfo_Int(param_value_size, param_value, param_value_size_ret, self)
+  }
+
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32 {
+    writeInfo_ArrayOfInt(
+      param_value_size, param_value, param_value_size_ret, value)
+  }
+}
+
+extension Int64: CLInfo {
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32 {
+    writeInfo_Int(param_value_size, param_value, param_value_size_ret, self)
+  }
+
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32 {
+    writeInfo_ArrayOfInt(
+      param_value_size, param_value, param_value_size_ret, value)
+  }
+}
+
+extension UInt64: CLInfo {
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32 {
+    writeInfo_Int(param_value_size, param_value, param_value_size_ret, self)
+  }
+
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32 {
+    writeInfo_ArrayOfInt(
+      param_value_size, param_value, param_value_size_ret, value)
+  }
+}
+
+// MARK: - Other Conformances
 
 extension String: CLInfo {
   func writeInfo(
@@ -64,6 +166,26 @@ extension String: CLInfo {
     _ value: [Self]
   ) -> Int32 {
     writeInfo_ArrayOfString(
+      param_value_size, param_value, param_value_size_ret, value)
+  }
+}
+
+extension CLNameVersion: CLInfo {
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32 {
+    notImplementedError()
+  }
+
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32 {
+    writeInfo_ArrayOfCLNameVersion(
       param_value_size, param_value, param_value_size_ret, value)
   }
 }

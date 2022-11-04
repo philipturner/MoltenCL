@@ -63,8 +63,10 @@ public class CLPlatform {
       (_1_0_0, "cl_khr_depth_images"),
 
       // OpenCL 2.0 requires exposing `MTLIndirectCommandBuffer` to the shader
-      // code.
-      (_1_0_0, "cl_khr_device_enqueue_local_arg_types"),
+      // code. Some GPU-side dispatching functionality doesn't exist in Metal,
+      // but seems possible to emulate. `__opencl_c_device_enqueue` will be
+      // disabled until the feature is implemented.
+      //      (_1_0_0, "cl_khr_device_enqueue_local_arg_types"),
 
       // Use `MTLDevice.registryID` for a unique 8-byte ID, zero out the
       // remaining bytes.
@@ -74,7 +76,7 @@ public class CLPlatform {
 
       // `__builtin_expect` and `__builtin_assume` are callable from MSL, just
       // need to determine how they map to AIR
-      (_1_0_0, "cl_khr_expect_assume"),
+      //      (_1_0_0, "cl_khr_expect_assume"),
       (_1_0_0, "cl_khr_fp16"),
 
       // Need to finish the 'metal-float64' library, which emulates FP64 on
@@ -225,45 +227,27 @@ public func clGetPlatformInfo(
   let platform: CLPlatform = Unmanaged.fromOpaque(.init(clPlatform))
     .takeUnretainedValue()
 
-  //  @inline(__always)
-  //  func writeInfo2<T: CLInfoProtocol>(_ value: T.Element, type: T.Type = T.self) -> Int32 {
-  //    return T(value).writeInfo(
-  //      param_value_size, param_value, param_value_size_ret)
-  //  }
-
-  @inline(__always)
   func writeInfo<T: CLInfo>(_ value: T) -> Int32 {
     value.writeInfo(param_value_size, param_value, param_value_size_ret)
   }
 
   switch Int32(bitPattern: param_name) {
   case CL_PLATFORM_PROFILE:
-    return writeInfo_String(
-      param_value_size, param_value, param_value_size_ret, platform.profile)
+    return writeInfo(platform.profile)
   case CL_PLATFORM_VERSION:
-    return writeInfo_String(
-      param_value_size, param_value, param_value_size_ret, platform.version)
+    return writeInfo(platform.version)
   case CL_PLATFORM_NUMERIC_VERSION:
-    return writeInfo_Int(
-      param_value_size, param_value, param_value_size_ret,
-      platform.numericVersion.version)
+    return writeInfo(platform.numericVersion.version)
   case CL_PLATFORM_NAME:
     return writeInfo(platform.name)
-  //    return writeInfo_String(
-  //      param_value_size, param_value, param_value_size_ret, platform.name)
   case CL_PLATFORM_VENDOR:
-    return writeInfo_String(
-      param_value_size, param_value, param_value_size_ret, platform.vendor)
+    return writeInfo(platform.vendor)
   case CL_PLATFORM_EXTENSIONS:
     return writeInfo(platform.extensions)
   case CL_PLATFORM_EXTENSIONS_WITH_VERSION:
-    return writeInfo_ArrayOfCLNameVersion(
-      param_value_size, param_value, param_value_size_ret,
-      platform.extensionsWithVersion)
+    return writeInfo(platform.extensionsWithVersion)
   case CL_PLATFORM_HOST_TIMER_RESOLUTION:
-    return writeInfo_Int(
-      param_value_size, param_value, param_value_size_ret,
-      platform.hostTimerResolution)
+    return writeInfo(platform.hostTimerResolution)
   default:
     return CL_INVALID_VALUE
   }
