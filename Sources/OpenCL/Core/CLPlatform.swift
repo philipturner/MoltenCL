@@ -58,6 +58,7 @@ public class CLPlatform {
     // Commented out extensions may be implemented in the future.
     var extensions: [(CLVersion, String)] = [
       (_1_0_0, "cl_khr_3d_image_writes"),
+      (_1_0_0, "cl_khr_async_work_group_copy_fence"),
       (_1_0_0, "cl_khr_byte_addressable_store"),
       (_1_0_0, "cl_khr_create_command_queue"),
       (_1_0_0, "cl_khr_depth_images"),
@@ -69,14 +70,14 @@ public class CLPlatform {
       //      (_1_0_0, "cl_khr_device_enqueue_local_arg_types"),
 
       // Use `MTLDevice.registryID` for a unique 8-byte ID, zero out the
-      // remaining bytes.
-      //      (_1_0_0, "cl_khr_device_uuid"),
+      // remaining 8 bytes.
+      (_1_0_0, "cl_khr_device_uuid"),
       (_1_0_0, "cl_khr_extended_bit_ops"),
       (_1_0_0, "cl_khr_extended_versioning"),
 
       // `__builtin_expect` and `__builtin_assume` are callable from MSL, just
-      // need to determine how they map to AIR
-      //      (_1_0_0, "cl_khr_expect_assume"),
+      // need to determine how they map to AIR.
+      (_1_0_0, "cl_khr_expect_assume"),
       (_1_0_0, "cl_khr_fp16"),
 
       // Need to finish the 'metal-float64' library, which emulates FP64 on
@@ -104,7 +105,7 @@ public class CLPlatform {
 
       // Specification forces cluster size to be compile-time constant, so we
       // can implement sizes other than {4, simd_size} through emulation.
-      //      (_1_0_0, "cl_khr_subgroup_clustered_reduce"),
+      (_1_0_0, "cl_khr_subgroup_clustered_reduce"),
       (_1_0_0, "cl_khr_subgroup_extended_types"),
       (_1_0_0, "cl_khr_subgroup_named_barrier"),
       (_1_0_0, "cl_khr_subgroup_non_uniform_arithmetic"),
@@ -112,7 +113,7 @@ public class CLPlatform {
       (_1_0_0, "cl_khr_subgroup_rotate"),
       (_1_0_0, "cl_khr_subgroup_shuffle"),
       (_1_0_0, "cl_khr_subgroup_shuffle_relative"),
-      //      (_1_0_0, "cl_khr_terminate_context"),
+      (_1_0_0, "cl_khr_work_group_uniform_arithmetic"),
     ]
 
     // Deviating from Apple's convention of capitalizing the word after `cl_`.

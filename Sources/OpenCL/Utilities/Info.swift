@@ -150,6 +150,25 @@ extension UInt64: CLInfo {
 
 // MARK: - Other Conformances
 
+extension Bool: CLInfo {
+  func writeInfo(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?
+  ) -> Int32 {
+    writeInfo_Bool(param_value_size, param_value, param_value_size_ret, self)
+  }
+
+  static func writeInfo_Array(
+    _ param_value_size: Int,
+    _ param_value: UnsafeMutableRawPointer?,
+    _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+    _ value: [Self]
+  ) -> Int32 {
+    notImplementedError()
+  }
+}
+
 extension String: CLInfo {
   func writeInfo(
     _ param_value_size: Int,
@@ -191,6 +210,27 @@ extension CLNameVersion: CLInfo {
 }
 
 // MARK: - Implementations
+
+func writeInfo_Bool(
+  _ param_value_size: Int,
+  _ param_value: UnsafeMutableRawPointer?,
+  _ param_value_size_ret: UnsafeMutablePointer<Int>?,
+  _ value: Bool
+) -> Int32 {
+  // cl_bool is a typealias of `UInt32`, which is 4 bytes.
+  let value_size = MemoryLayout<cl_bool>.stride
+  if let param_value_size_ret = param_value_size_ret {
+    param_value_size_ret.pointee = value_size
+  }
+  if let param_value = param_value {
+    if param_value_size < value_size {
+      return CL_INVALID_VALUE
+    }
+    let castedPointer = param_value.assumingMemoryBound(to: cl_bool.self)
+    castedPointer.pointee = value ? UInt32(CL_TRUE) : UInt32(CL_FALSE)
+  }
+  return CL_SUCCESS
+}
 
 func writeInfo_Int<T: BinaryInteger>(
   _ param_value_size: Int,

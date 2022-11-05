@@ -7,7 +7,7 @@ The missing OpenCL 3.0 driver for macOS. This un-deprecates OpenCL, making Apple
 Features (not exhaustive):
 - half precision
 - double precision (through emulation on Apple GPUs, possibly hardware FP64 on AMD)
-- does not flush the `cl_queue` after every command (which Apple's OpenCL 1.2 driver does)
+- waiting to flush the `cl_queue` until multiple commands have queued up
 - compiling shaders in OpenCL C and Metal Shading Language
 - transforming OpenCL SPIR-V and AIR binary code into kernel objects
 - hardware-accelerated matrix multiplication intrinsics for AI/ML (`simdgroup_matrix`)
@@ -15,6 +15,12 @@ Features (not exhaustive):
 - built-in integration with hipSYCL
 - access to the Metal runtime objects that back OpenCL API types
 - Swift bindings for integration into iOS apps
+
+Does not support:
+- Shared Virtual Memory
+- Device-side enqueue (this may be possible to emulate, but not supporting for now)
+- OpenCL 2.0 memory consistency model (atomic memory orders besides relaxed)
+- Generic address space
 
 Operating system support:
 - iOS/tvOS 16+ (may need to compile shaders ahead-of-time for optimal performance)

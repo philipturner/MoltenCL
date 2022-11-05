@@ -183,7 +183,7 @@ extension CLDevice {
     // Linux.
     // https://bbs.archlinux.org/viewtopic.php?id=269794
 
-    // TODO: Get someone with a larger AMD GPU to validate my theory.
+    // TODO: Get someone with a larger AMD GPU to validate this.
     switch _vendor {
     case .amd:
       if mtlDevice.recommendedMaxWorkingSetSize > 4 * 1024 * 1024 * 1024 {
@@ -194,6 +194,134 @@ extension CLDevice {
     default:
       return 64
     }
+  }
+
+  public var maxMemoryAllocationSize: UInt64 {
+    UInt64(mtlDevice.maxBufferLength)
+  }
+
+  // NOTE: Rephrases "imageSupport" to "supportsImages", should repeat this
+  // convention in other places.
+  public var supportsImages: Bool {
+    true
+  }
+
+  public var maxReadImageArguments: UInt32 {
+    128
+  }
+
+  public var maxWriteImageArguments: UInt32 {
+    128
+  }
+
+  public var maxReadWriteImageArguments: UInt32 {
+    128
+  }
+
+  // Use MSL version as the AIR version. Each MSL version adds language features
+  // incompatible with the previous OS's AIR compiler.
+  public var ilVersions: [String] {
+    ["SPIR-V_1.6", "AIR_3.0"]
+  }
+
+  public var ilsWithVersion: [CLNameVersion] {
+    [
+      CLNameVersion(version: .init(major: 1, minor: 6), name: "SPIR-V"),
+      CLNameVersion(version: .init(major: 3, minor: 0), name: "AIR"),
+    ]
+  }
+
+  public var image2DMaxWidth: Int {
+    16384
+  }
+
+  public var image2DMaxHeight: Int {
+    16384
+  }
+
+  public var image3DMaxWidth: Int {
+    16384
+  }
+
+  public var image3DMaxHeight: Int {
+    16384
+  }
+
+  public var image3DMaxDepth: Int {
+    16384
+  }
+
+  // Maximum width of a `texture_buffer`, not width of a `texture1d`. OpenCL C
+  // has a special type for this, `image1d_buffer_t`.
+  public var imageMaxBufferSize: Int {
+    // In all tested devices, there was a constant value across vendors.
+    switch _vendor {
+    case .apple:
+      // Tested A14 (from recollection)
+      // Tested M1 Max
+      // Tested A15
+      return 256 * 1024 * 1024
+    case .intel:
+      // Tested HD Graphics 630
+      // Tested UHD Graphics 630
+      // Tested Iris Pro
+      return 24 * 1024 * 1024
+    case .amd:
+      // Tested Radeon R9 M370X
+      // Tested Radeon Pro 560
+      return 64 * 1024
+    }
+  }
+
+  public var imageMaxArraySize: Int {
+    2048
+  }
+
+  public var maxSamplers: UInt32 {
+    16
+  }
+
+  public var imagePitchAlignment: UInt32 {
+    // Specification implies this value would vary, depending on the pixel type.
+    // However, there is no place to specify the pixel type when querying this
+    // property! The link below suggests it's the minimum row width, in bytes:
+    // https://github.com/KhronosGroup/OpenCL-Docs/issues/674
+    UInt32(mtlDevice.minimumLinearTextureAlignment(for: .r8Uint))
+  }
+
+  public var imageBaseAddressAlignment: UInt32 {
+    // According to the Metal API docs, `minimumLinearTextureAlignment` serves
+    // as alignment for both `offset` and `bytesPerRow`.
+    UInt32(mtlDevice.minimumLinearTextureAlignment(for: .r8Uint))
+  }
+
+  public var maxPipeArguments: UInt32 {
+    16
+  }
+
+  public var pipeMaxActiveReservations: UInt32 {
+    // AMD allows up to 16 reservations per thread, or 16 * 1024 reservations
+    // per threadgroup. Allowing multiple reservations per work item could make
+    // scheduling logic more complex, and reduce performance.
+    //
+    // Intel uses this packet size:
+    // https://bugzilla.redhat.com/show_bug.cgi?id=2075944
+    1
+  }
+
+  public var pipeMaxPacketSize: UInt32 {
+    // AMD seems to limit packet size to 1/8 of global memory. However, an
+    // emulated `cl_pipe` implementation might run faster with fixed packet
+    // size.
+    //
+    // Intel uses this packet size:
+    // https://bugzilla.redhat.com/show_bug.cgi?id=2075944
+    1024
+  }
+
+  public var maxParameterSize: Int {
+    // Maximum size of constant buffer arguments in Metal.
+    4096
   }
 }
 
@@ -310,6 +438,50 @@ public func clGetDeviceInfo(
     return writeInfo(device.maxClockFrequency)
   case CL_DEVICE_ADDRESS_BITS:
     return writeInfo(device.addressBits)
+  case CL_DEVICE_MAX_MEM_ALLOC_SIZE:
+    return writeInfo(device.maxMemoryAllocationSize)
+  case CL_DEVICE_IMAGE_SUPPORT:
+    return writeInfo(device.supportsImages)
+  case CL_DEVICE_MAX_READ_IMAGE_ARGS:
+    return writeInfo(device.maxReadImageArguments)
+  case CL_DEVICE_MAX_WRITE_IMAGE_ARGS:
+    return writeInfo(device.maxWriteImageArguments)
+  case CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS:
+    return writeInfo(device.maxReadWriteImageArguments)
+  case CL_DEVICE_IL_VERSION:
+    return writeInfo(device.ilVersions)
+  case CL_DEVICE_ILS_WITH_VERSION:
+    return writeInfo(device.ilsWithVersion)
+
+  case CL_DEVICE_IMAGE2D_MAX_WIDTH:
+    return writeInfo(device.image2DMaxWidth)
+  case CL_DEVICE_IMAGE2D_MAX_HEIGHT:
+    return writeInfo(device.image2DMaxHeight)
+  case CL_DEVICE_IMAGE3D_MAX_WIDTH:
+    return writeInfo(device.image3DMaxWidth)
+  case CL_DEVICE_IMAGE3D_MAX_HEIGHT:
+    return writeInfo(device.image3DMaxHeight)
+  case CL_DEVICE_IMAGE3D_MAX_DEPTH:
+    return writeInfo(device.image3DMaxDepth)
+  case CL_DEVICE_IMAGE_MAX_BUFFER_SIZE:
+    return writeInfo(device.imageMaxBufferSize)
+  case CL_DEVICE_IMAGE_MAX_ARRAY_SIZE:
+    return writeInfo(device.imageMaxArraySize)
+  case CL_DEVICE_MAX_SAMPLERS:
+    return writeInfo(device.maxSamplers)
+  case CL_DEVICE_IMAGE_PITCH_ALIGNMENT:
+    return writeInfo(device.imagePitchAlignment)
+  case CL_DEVICE_IMAGE_BASE_ADDRESS_ALIGNMENT:
+    return writeInfo(device.imageBaseAddressAlignment)
+
+  case CL_DEVICE_MAX_PIPE_ARGS:
+    return writeInfo(device.maxPipeArguments)
+  case CL_DEVICE_PIPE_MAX_ACTIVE_RESERVATIONS:
+    return writeInfo(device.pipeMaxActiveReservations)
+  case CL_DEVICE_PIPE_MAX_PACKET_SIZE:
+    return writeInfo(device.pipeMaxPacketSize)
+  case CL_DEVICE_MAX_PARAMETER_SIZE:
+    return writeInfo(device.maxParameterSize)
   default:
     return CL_INVALID_VALUE
   }
