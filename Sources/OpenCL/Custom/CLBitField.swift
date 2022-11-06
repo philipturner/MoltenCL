@@ -51,7 +51,7 @@ public struct CLDeviceType: CLBitField {
   public static let all = Self(rawValue: RawValue(CL_DEVICE_TYPE_ALL))
 }
 
-public struct CLDeviceFloatingPointConfig: CLBitField {
+public struct CLDeviceFloatingPointConfiguration: CLBitField {
   public let rawValue: cl_device_fp_config
   public init(
     rawValue: cl_device_fp_config

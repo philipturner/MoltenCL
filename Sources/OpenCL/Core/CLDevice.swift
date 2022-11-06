@@ -323,6 +323,123 @@ extension CLDevice {
     // Maximum size of constant buffer arguments in Metal.
     4096
   }
+
+  public var memoryBaseAddressAlign: Int {
+    // Alignment in bits, not bytes.
+    switch _vendor {
+    case .apple:
+      return 4096 * 8
+    case .intel:
+      return 128 * 8
+    case .amd:
+      return 4096 * 8
+    }
+  }
+
+  public var singleFloatingPointConfiguration:
+    CLDeviceFloatingPointConfiguration
+  {
+    return [
+      // Denorms are disabled in Apple's OpenCL driver, but available in AIR.
+      .denorm,
+      .infNaN,
+      .roundToNearest,
+      .roundToZero,
+
+      // Round to infinity accomplished through emulation.
+      .roundToInf,
+      .fma,
+
+      // Correctly rounded divide/sqrt specified through a compile option.
+      // Precise versions of each MSL function should also be exposed to SPIR-V
+      // individually.
+      //
+      // This feature is exclusive to single precision; no other configurations
+      // should include it.
+      .correctlyRoundedDivideSqrt,
+    ]
+  }
+
+  // NOTE: FP64 not yet supported, only prototyping the configuration.
+  public var doubleFloatingPointConfiguration:
+    CLDeviceFloatingPointConfiguration
+  {
+    var configuration: CLDeviceFloatingPointConfiguration = [
+      .denorm,
+      .infNaN,
+      .roundToNearest,
+      .roundToZero,
+      .roundToInf,
+      .fma,
+    ]
+
+    switch _vendor {
+    case .amd:
+      // Uses native double precision hardware.
+      break
+    default:
+      // Support is emulated in software.
+      configuration.insert(.softFloat)
+    }
+    return configuration
+  }
+
+  // NOTE: The OpenCL 3.0 specification does not include the macro for this.
+  public var halfFloatingPointConfiguration: CLDeviceFloatingPointConfiguration
+  {
+    return [
+      // Denorms are disabled in Apple's OpenCL driver, but available in AIR.
+      .denorm,
+      .infNaN,
+      .roundToNearest,
+      .roundToZero,
+
+      // Round to infinity accomplished through emulation.
+      .roundToInf,
+      .fma,
+    ]
+  }
+
+  var globalMemoryCacheType: CLDeviceMemoryCacheType {
+    .none
+  }
+
+  var globalMemoryCacheLineSize: UInt32 {
+    0
+  }
+
+  var globalMemoryCacheSize: UInt64 {
+    0
+  }
+
+  var globalMemorySize: UInt64 {
+    // Not the actual memory size on Apple silicon; rather, something close to
+    // 70% of the total RAM. The maximum usable RAM gets murky, because it's
+    // shared with the CPU and can page to the disk.
+    mtlDevice.recommendedMaxWorkingSetSize
+  }
+
+  var maxConstantBufferSize: UInt64 {
+    switch _vendor {
+    case .apple:
+      return 1024 * 1024 * 1024
+    default:
+      return 64 * 1024
+    }
+  }
+
+  var maxConstantArguments: UInt32 {
+    switch _vendor {
+    case .apple:
+      return 31
+    default:
+      // The MSL specification says 14, but Apple's OpenCL driver says 8.
+      return 14
+    }
+  }
+
+  // Rephrases "endianLittle" to "isLittleEndian".
+  // public var isLittleEndian: Bool
 }
 
 // MARK: - C API

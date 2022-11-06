@@ -21,17 +21,39 @@ Does not support:
 - Device-side enqueue (this may be possible to emulate, but not supporting for now)
 - OpenCL 2.0 memory consistency model (atomic memory orders besides relaxed)
 - Generic address space
+- Any OpenCL API that is deprecated
 
-Operating system support:
+Operating systems:
 - iOS/tvOS 16+ (may need to compile shaders ahead-of-time for optimal performance)
 - macOS 13+
 - requires at least `MTL::GPUFamily::Apple7` or `MTL::GPUFamily::Mac2`
 - to fully optimize AIR binaries compiled from OpenCL C/SPIR-V, you must install Metal command-line tools (optional)
+
+## Naming Conventions
+
+The Swift bindings rename the following words in OpenCL macros. Any other deviations from the C API are documented and justified.
+- "Addr" to "Address"
+- "Alloc" to "Allocation"
+- "Arg" to "Argument"
+- "Bitfield" to "BitField"
+- "Cacheline" to "CacheLine"
+- "Ctor" to "Constructor"
+- "Config" to "Configuration"
+- "Dtor" to "Destructor"
+- "Exec" to "Execution"
+- "FP" to "FloatingPoint"
+- "Mem" to "Memory"
+- "Memobject" to "MemoryObject"
+- "Ptr" to "Pointer"
+- "Rect" to "Rectangle"
+- "Spec" to "SpecializationConstant"
 
 ## Attribution and Licensing
 
 MoltenCL is available for free under the MIT license. MoltenCL is not owned or endorsed by Apple or the Khronos Group. However, OpenCL is a trademark of Apple.
 
 Uses [philipturner/metal-float64](https://github.com/philipturner/metal-float64) to emulate double-precision arithmetic.
+
+Recycles [philipturner/swift-opencl](https://github.com/philipturner/swift-opencl), an incomplete attempt to wrap OpenCL in Swift bindings.
 
 Homebrew came up with the catch phrase "The missing package manager for macOS (or Linux)". I used that phrase for ideas when coming up with a subtitle for this repository.
