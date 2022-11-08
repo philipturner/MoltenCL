@@ -293,7 +293,8 @@ extension CLDevice {
   }
 
   public var maxPipeArguments: UInt32 {
-    16
+    // Pipes are not supported yet.
+    0  // 16
   }
 
   public var pipeMaxActiveReservations: UInt32 {
@@ -303,7 +304,9 @@ extension CLDevice {
     //
     // Intel uses this packet size:
     // https://bugzilla.redhat.com/show_bug.cgi?id=2075944
-    1
+
+    // Pipes are not supported yet.
+    0  // 1
   }
 
   public var pipeMaxPacketSize: UInt32 {
@@ -313,7 +316,9 @@ extension CLDevice {
     //
     // Intel uses this packet size:
     // https://bugzilla.redhat.com/show_bug.cgi?id=2075944
-    1024
+
+    // Pipes are not supported yet.
+    0  // 1024
   }
 
   public var maxParameterSize: Int {
@@ -564,7 +569,7 @@ extension CLDevice {
     platform.numericVersion
   }
 
-  public var openclCAllVersions: [CLNameVersion] {
+  private static let _openclCAllVersions: [CLNameVersion] = {
     // Returns newest first to ensure OpenCL C 3.0 is recognized.
     return [
       .init(version: .init(major: 3, minor: 0), name: "OpenCL C"),
@@ -572,12 +577,62 @@ extension CLDevice {
       .init(version: .init(major: 1, minor: 1), name: "OpenCL C"),
       .init(version: .init(major: 1, minor: 0), name: "OpenCL C"),
     ]
+  }()
+
+  public var openclCAllVersions: [CLNameVersion] {
+    Self._openclCAllVersions
   }
 
-  public var openclCFeatures: [CLNameVersion] {
+  private static let _openclCFeatures: [CLNameVersion] = {
     let _3_0_0 = CLVersion(major: 1, minor: 1, patch: 0)
-    // TODO: Finish this.
-    fatalError()
+
+    let features: [(CLVersion, String)] = [
+      (_3_0_0, "__opencl_c_3d_image_writes"),
+      (_3_0_0, "__opencl_c_atomic_scope_device"),
+      (_3_0_0, "__opencl_c_fp64"),
+      (_3_0_0, "__opencl_c_images"),
+      (_3_0_0, "__opencl_c_int64"),
+      (_3_0_0, "__opencl_c_read_write_images"),
+      (_3_0_0, "__opencl_c_subgroups"),
+      (_3_0_0, "__opencl_c_work_group_collective_functions"),
+    ]
+
+    return features.map { CLNameVersion(version: $0.0, name: $0.1) }
+  }()
+
+  public var openclCFeatures: [CLNameVersion] {
+    Self._openclCFeatures
+  }
+
+  public var extensions: [String] {
+    CLPlatform._extensions
+  }
+
+  public var extensionsWithVersion: [CLNameVersion] {
+    CLPlatform._extensionsWithVersion
+  }
+
+  public var printfBufferSize: Int {
+    // Arbitrary number, no significant reason for any particular size.
+    // Apple and Intel GPUs return the minimum (1 MB), while AMD GPUs return
+    // 128 MB on Apple's OpenCL driver. Let's create a sweet spot that doesn't
+    // eat up significant memory on small devices.
+    32 * 1024 * 1024
+  }
+
+  // Rephrases "preferredInteropUserSync" to
+  // "prefersInteropUserSynchronization".
+  public var prefersInteropUserSynchronization: Bool {
+    // Don't know how Metal interop will be implemented. Once it is, this
+    // property may change to `false`.
+    true
+  }
+
+  // Nullable because the OpenCL specification says it can be `NULL`. Repeat
+  // this convention for other properties that are explicitly nullable.
+  public var parentDevice: CLDevice? {
+    // MoltenCL does not support device fission.
+    nil
   }
 }
 

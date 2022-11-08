@@ -4,27 +4,30 @@
 
 The missing OpenCL 3.0 driver for macOS. This un-deprecates OpenCL, making Apple devices viable for high-performance GPGPU through an industry-standard API. It uses Metal behind the scenes to minimize CPU overhead and maximize GPU performance.
 
-Features (not exhaustive):
+Supported features (not exhaustive):
 - half precision
 - double precision (through emulation)
 - waiting to flush the `cl_queue` until multiple commands have queued up
 - compiling shaders in OpenCL C and Metal Shading Language
 - transforming OpenCL SPIR-V and AIR binary code into kernel objects
 - hardware-accelerated matrix multiplication intrinsics for AI/ML (`simdgroup_matrix`)
-- unified shared memory pointers that expose GPU virtual addresses
+- SYCL USM pointers that expose GPU virtual addresses
+- subgroup permute/reductions
+- workgroup collective functions, async workgroup copies
 - built-in integration with hipSYCL
 - access to the Metal runtime objects that back OpenCL API types
 - Swift bindings for integration into iOS apps
-- OpenCL pipes
-- subgroup permute/reductions and async workgroup copies
 
-Does not support:
-- shared Virtual Memory
-- device-side enqueue (possible, but extremely time-consuming, to emulate)
-- OpenCL 2.0 memory consistency model (atomic memory orders besides relaxed)
-- generic address space
-- Pprogram scope global variables (support can be added in the future)
+Does not currently support, because of effort required to implement:
+- device-side enqueue (requires emulating a lot of features)
+- generic address space (needs compiler transformations)
+- pipes (requires generic address space)
+- program scope global variables (not anticipating significant need for this feature)
 - any OpenCL API that is deprecated
+
+Cannot support:
+- Shared Virtual Memory (emulating this would seriously degrade performance; instead, access device-only pointers through SYCL)
+- OpenCL 2.0 memory consistency model (atomic memory orders besides relaxed, not supported by Apple hardware)
 
 Operating systems:
 - iOS/tvOS 16+ (may need to compile shaders ahead-of-time for optimal performance)

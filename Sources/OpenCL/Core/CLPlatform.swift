@@ -50,7 +50,6 @@ public class CLPlatform {
     major: 3, minor: 0, patch: 12)
 
   internal static let _extensionsWithVersion: [CLNameVersion] = {
-    () -> [CLNameVersion] in
     // Versioning is mostly for provisional extensions and the DP4a instruction.
     // MoltenCL does not support any extensions with a version other than 1.0.0.
     let _1_0_0 = CLVersion(major: 1, minor: 0, patch: 0)
