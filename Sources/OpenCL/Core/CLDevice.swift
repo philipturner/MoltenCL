@@ -53,8 +53,6 @@ public class CLDevice {
 }
 
 extension CLDevice {
-  // OpenCL 1.0
-
   public var type: CLDeviceType {
     if mtlDevice === CLDevice.default.mtlDevice {
       return [.gpu, .default]
@@ -120,8 +118,8 @@ extension CLDevice {
   }
 
   public var preferredVectorWidthDouble: UInt32 {
-    // TODO: Support double precision
-    0
+    // Encourage coalescing 4 operations into one function call.
+    4
   }
 
   public var preferredVectorWidthHalf: UInt32 {
@@ -157,8 +155,8 @@ extension CLDevice {
   }
 
   public var nativeVectorWidthDouble: UInt32 {
-    // TODO: Support double precision
-    0
+    // Encourage coalescing 4 operations into one function call.
+    4
   }
 
   public var nativeVectorWidthHalf: UInt32 {
@@ -200,8 +198,7 @@ extension CLDevice {
     UInt64(mtlDevice.maxBufferLength)
   }
 
-  // NOTE: Rephrases "imageSupport" to "supportsImages", should repeat this
-  // convention in other places.
+  // Rephrases "imageSupport" to "supportsImages".
   public var supportsImages: Bool {
     true
   }
@@ -360,28 +357,20 @@ extension CLDevice {
     ]
   }
 
-  // NOTE: FP64 not yet supported, only prototyping the configuration.
   public var doubleFloatingPointConfiguration:
     CLDeviceFloatingPointConfiguration
   {
-    var configuration: CLDeviceFloatingPointConfiguration = [
+    return [
       .denorm,
       .infNaN,
       .roundToNearest,
       .roundToZero,
       .roundToInf,
       .fma,
-    ]
 
-    switch _vendor {
-    case .amd:
-      // Uses native double precision hardware.
-      break
-    default:
-      // Support is emulated in software.
-      configuration.insert(.softFloat)
-    }
-    return configuration
+      // Use emulation on all devices, including those with hardware FP64.
+      .softFloat,
+    ]
   }
 
   // NOTE: The OpenCL 3.0 specification does not include the macro for this.
@@ -438,8 +427,158 @@ extension CLDevice {
     }
   }
 
+  var maxGlobalVariableSize: Int {
+    // Not supporting global variables yet.
+    0
+  }
+
+  var globalVariablePreferredTotalSize: Int {
+    // Not supporting global variables yet.
+    0
+  }
+
+  var localMemoryType: CLDeviceLocalMemoryType {
+    .local
+  }
+
+  var localMemorySize: UInt64 {
+    UInt64(mtlDevice.maxThreadgroupMemoryLength)
+  }
+
+  // Rephrases "errorCorrectionSupport" to "supportsErrorCorrection".
+  var supportsErrorCorrection: Bool {
+    false
+  }
+
+  var profilingTimerResolution: UInt64 {
+    // TODO: Use OpenCL to find the exact resolution on Intel and AMD.
+    // TODO: Manually test Apple's profiling timer resolution, because I don't
+    // trust the extremely low value of 1000 ns acquired from Apple's OpenCL
+    // driver. Especially when CPU and GPU are in perfect sync, while CPU has a
+    // supposed resolution of 41 ns.
+    notImplementedError()
+  }
+
   // Rephrases "endianLittle" to "isLittleEndian".
-  // public var isLittleEndian: Bool
+  public var isLittleEndian: Bool {
+    true
+  }
+
+  // Rephrases "available" to "isAvailable".
+  public var isAvailable: Bool {
+    true
+  }
+
+  // Rephrases "compilerAvailable" to "compilerIsAvailable".
+  public var compilerIsAvailable: Bool {
+    // On iOS, the online compiler may not support all optimizations.
+    true
+  }
+
+  // Rephrases "linkerAvailable" to "linkerIsAvailable".
+  public var linkerIsAvailable: Bool {
+    true
+  }
+
+  public var executionCapabilities: CLDeviceExecutionCapabilities {
+    .kernel
+  }
+
+  public var queueOnHostProperties: CLCommandQueueProperties {
+    // These two profiling methods are mutually exclusive.
+    if mtlDevice.supportsCounterSampling(.atDispatchBoundary),
+      mtlDevice.supportsCounterSampling(.atBlitBoundary)
+    {
+      // Can profile without creating a new command encoder.
+      // Only possible on Intel Macs.
+      return [.outOfOrderExecutionModeEnable, .profilingEnable]
+    } else if mtlDevice.supportsCounterSampling(.atStageBoundary) {
+      // Must profile by creating a new command encoder.
+      // Only possible on Apple silicon Macs and iOS.
+      return [.outOfOrderExecutionModeEnable, .profilingEnable]
+    } else {
+      fatalError("Metal device '\(mtlDevice.name)' does not support profiling.")
+    }
+  }
+
+  public var queueOnDeviceProperties: CLCommandQueueProperties {
+    // MoltenCL does not support on-device queues yet.
+    []
+  }
+
+  public var queueOnDevicePreferredSize: UInt32 {
+    0
+  }
+
+  public var queueOnDeviceMaxSize: UInt32 {
+    0
+  }
+
+  public var maxOnDeviceQueues: UInt32 {
+    0
+  }
+
+  public var maxOnDeviceEvents: UInt32 {
+    0
+  }
+
+  public var builtInKernels: [String] {
+    []
+  }
+
+  public var builtInKernelsWithVersion: [CLNameVersion] {
+    []
+  }
+
+  public var platform: CLPlatform {
+    CLPlatform.default
+  }
+
+  public var name: String {
+    mtlDevice.name
+  }
+
+  public var vendor: String {
+    "Apple"
+  }
+
+  // The C macro `CL_DRIVER_VERSION` does not include the word "DEVICE".
+  public var driverVersion: String {
+    // Alpha version, pre-release.
+    //
+    // TODO: Make GitHub action that automatically writes the version into a
+    // Swift source file, as a global variable. Force this action to trigger
+    // before each new release.
+    "0.1"
+  }
+
+  public var profile: String {
+    platform.profile
+  }
+
+  public var version: String {
+    platform.version
+  }
+
+  public var numericVersion: CLVersion {
+    platform.numericVersion
+  }
+
+  public var openclCAllVersions: [CLNameVersion] {
+    // Returns newest first to ensure OpenCL C 3.0 is recognized.
+    return [
+      .init(version: .init(major: 3, minor: 0), name: "OpenCL C"),
+      .init(version: .init(major: 1, minor: 2), name: "OpenCL C"),
+      .init(version: .init(major: 1, minor: 1), name: "OpenCL C"),
+      .init(version: .init(major: 1, minor: 0), name: "OpenCL C"),
+    ]
+  }
+
+  public var openclCFeatures: [CLNameVersion] {
+    let _3_0_0 = CLVersion(major: 1, minor: 1, patch: 0)
+    // TODO: Finish this.
+    fatalError()
+  }
 }
 
 // MARK: - C API

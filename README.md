@@ -6,7 +6,7 @@ The missing OpenCL 3.0 driver for macOS. This un-deprecates OpenCL, making Apple
 
 Features (not exhaustive):
 - half precision
-- double precision (through emulation on Apple GPUs, possibly hardware FP64 on AMD)
+- double precision (through emulation)
 - waiting to flush the `cl_queue` until multiple commands have queued up
 - compiling shaders in OpenCL C and Metal Shading Language
 - transforming OpenCL SPIR-V and AIR binary code into kernel objects
@@ -15,13 +15,16 @@ Features (not exhaustive):
 - built-in integration with hipSYCL
 - access to the Metal runtime objects that back OpenCL API types
 - Swift bindings for integration into iOS apps
+- OpenCL pipes
+- subgroup permute/reductions and async workgroup copies
 
 Does not support:
-- Shared Virtual Memory
-- Device-side enqueue (this may be possible to emulate, but not supporting for now)
+- shared Virtual Memory
+- device-side enqueue (possible, but extremely time-consuming, to emulate)
 - OpenCL 2.0 memory consistency model (atomic memory orders besides relaxed)
-- Generic address space
-- Any OpenCL API that is deprecated
+- generic address space
+- Pprogram scope global variables (support can be added in the future)
+- any OpenCL API that is deprecated
 
 Operating systems:
 - iOS/tvOS 16+ (may need to compile shaders ahead-of-time for optimal performance)
@@ -47,6 +50,7 @@ The Swift bindings rename the following words in OpenCL macros. Any other deviat
 - "Ptr" to "Pointer"
 - "Rect" to "Rectangle"
 - "Spec" to "SpecializationConstant"
+- Rephrases each boolean property as a verb, but documents the name change.
 
 ## Attribution and Licensing
 
