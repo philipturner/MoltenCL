@@ -42,15 +42,14 @@ public class CLPlatform {
   // 996a022a7ad45583591df5e665af0f8f38b85e83
   private static let _version: String = "OpenCL 3.0 (Sep 15 2022 21:00:00)"
 
-  private static let _extensions: [String] = _extensionsWithVersion.map(\.name)
+  // Internal so the device can access it, without flooding the source code for
+  // `CLDevice` with these extensions.
+  internal static let _extensions: [String] = _extensionsWithVersion.map(\.name)
 
-  // Version v3.0.12, Thu, 15 Sep 2022 21:00:00 +0000:
-  // 996a022a7ad45583591df5e665af0f8f38b85e83
   private static let _numericVersion: CLVersion = .init(
     major: 3, minor: 0, patch: 12)
 
-  private static let _extensionsWithVersion: [CLNameVersion] = {
-    () -> [CLNameVersion] in
+  internal static let _extensionsWithVersion: [CLNameVersion] = {
     // Versioning is mostly for provisional extensions and the DP4a instruction.
     // MoltenCL does not support any extensions with a version other than 1.0.0.
     let _1_0_0 = CLVersion(major: 1, minor: 0, patch: 0)
@@ -80,9 +79,8 @@ public class CLPlatform {
       (_1_0_0, "cl_khr_expect_assume"),
       (_1_0_0, "cl_khr_fp16"),
 
-      // Need to finish the 'metal-float64' library, which emulates FP64 on
-      // Apple silicon. If possible, utilize native FP64 on AMD GPUs.
-      //      (_1_0_0, "cl_khr_fp64"),
+      // Uses "metal-float64" to emulate double precision.
+      (_1_0_0, "cl_khr_fp64"),
       (_1_0_0, "cl_khr_global_int32_base_atomics"),
       (_1_0_0, "cl_khr_global_int32_extended_atomics"),
       (_1_0_0, "cl_khr_il_program"),
@@ -153,22 +151,34 @@ public class CLPlatform {
 }
 
 extension CLPlatform {
-  public var profile: String { "FULL_PROFILE" }
+  public var profile: String {
+    "FULL_PROFILE"
+  }
 
-  public var version: String { Self._version }
+  public var version: String {
+    Self._version
+  }
 
-  public var numericVersion: CLVersion { Self._numericVersion }
+  public var numericVersion: CLVersion {
+    Self._numericVersion
+  }
 
-  public var name: String { "Apple" }
+  public var name: String {
+    "Apple"
+  }
 
-  public var vendor: String { "Apple" }
+  public var vendor: String {
+    "Apple"
+  }
 
-  public var extensions: [String] { Self._extensions }
+  public var extensions: [String] {
+    []
+  }
 
   // Returns the extensions with their version from the OpenCL Extension
   // Specification.
   public var extensionsWithVersion: [CLNameVersion] {
-    Self._extensionsWithVersion
+    []
   }
 
   // Safe to assume CPU timer is in nanoseconds, but not safe to assume GPU

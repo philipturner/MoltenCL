@@ -38,50 +38,56 @@ final class OpenCLTests: XCTestCase {
       XCTAssertEqual(nameString, "Apple")
     }
 
-    // CL_PLATFORM_EXTENSIONS
+    // TODO: Extract an OpenCL device and check its extensions instead.
 
-    var extensionsSize: Int = 0
-    clGetPlatformInfo(
-      platform, UInt32(CL_PLATFORM_EXTENSIONS), 0, nil, &extensionsSize)
-    XCTAssertGreaterThan(extensionsSize, 0)
+    #if false
 
-    withUnsafeTemporaryAllocation(
-      of: CChar.self, capacity: extensionsSize
-    ) { bufferPointer in
+      // CL_PLATFORM_EXTENSIONS
+
+      var extensionsSize: Int = 0
       clGetPlatformInfo(
-        platform, UInt32(CL_PLATFORM_EXTENSIONS), extensionsSize,
-        bufferPointer.baseAddress, nil)
-      let extensionsString = String(validatingUTF8: bufferPointer.baseAddress!)!
-      XCTAssert(extensionsString.contains("cl_khr_depth_images"))
-    }
+        platform, UInt32(CL_PLATFORM_EXTENSIONS), 0, nil, &extensionsSize)
+      XCTAssertGreaterThan(extensionsSize, 0)
 
-    // CL_PLATFORM_EXTENSIONS_WITH_VERSION
+      withUnsafeTemporaryAllocation(
+        of: CChar.self, capacity: extensionsSize
+      ) { bufferPointer in
+        clGetPlatformInfo(
+          platform, UInt32(CL_PLATFORM_EXTENSIONS), extensionsSize,
+          bufferPointer.baseAddress, nil)
+        let extensionsString = String(
+          validatingUTF8: bufferPointer.baseAddress!)!
+        XCTAssert(extensionsString.contains("cl_khr_depth_images"))
+      }
 
-    var extensionsWithVersionSize: Int = 0
-    clGetPlatformInfo(
-      platform, UInt32(CL_PLATFORM_EXTENSIONS_WITH_VERSION), 0, nil,
-      &extensionsWithVersionSize)
-    XCTAssertGreaterThan(extensionsWithVersionSize, 0)
+      // CL_PLATFORM_EXTENSIONS_WITH_VERSION
 
-    let clNameVersionStride = MemoryLayout<cl_name_version>.stride
-    XCTAssertEqual(extensionsWithVersionSize % clNameVersionStride, 0)
-
-    withUnsafeTemporaryAllocation(
-      of: cl_name_version.self,
-      capacity: extensionsWithVersionSize / clNameVersionStride
-    ) { bufferPointer in
+      var extensionsWithVersionSize: Int = 0
       clGetPlatformInfo(
-        platform, UInt32(CL_PLATFORM_EXTENSIONS_WITH_VERSION),
-        extensionsWithVersionSize,
-        bufferPointer.baseAddress, nil)
+        platform, UInt32(CL_PLATFORM_EXTENSIONS_WITH_VERSION), 0, nil,
+        &extensionsWithVersionSize)
+      XCTAssertGreaterThan(extensionsWithVersionSize, 0)
 
-      XCTAssertEqual(
-        bufferPointer[0].version, CLVersion(major: 1, minor: 0).version)
+      let clNameVersionStride = MemoryLayout<cl_name_version>.stride
+      XCTAssertEqual(extensionsWithVersionSize % clNameVersionStride, 0)
 
-      let stringPtr1 = UnsafeRawPointer(bufferPointer.baseAddress!) + 4
-      let stringPtr2 = stringPtr1.assumingMemoryBound(to: CChar.self)
-      let extensionsString = String(cString: stringPtr2)
-      XCTAssert(extensionsString.contains("cl_khr_"), extensionsString)
-    }
+      withUnsafeTemporaryAllocation(
+        of: cl_name_version.self,
+        capacity: extensionsWithVersionSize / clNameVersionStride
+      ) { bufferPointer in
+        clGetPlatformInfo(
+          platform, UInt32(CL_PLATFORM_EXTENSIONS_WITH_VERSION),
+          extensionsWithVersionSize,
+          bufferPointer.baseAddress, nil)
+
+        XCTAssertEqual(
+          bufferPointer[0].version, CLVersion(major: 1, minor: 0).version)
+
+        let stringPtr1 = UnsafeRawPointer(bufferPointer.baseAddress!) + 4
+        let stringPtr2 = stringPtr1.assumingMemoryBound(to: CChar.self)
+        let extensionsString = String(cString: stringPtr2)
+        XCTAssert(extensionsString.contains("cl_khr_"), extensionsString)
+      }
+    #endif
   }
 }

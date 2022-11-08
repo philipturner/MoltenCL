@@ -53,8 +53,6 @@ public class CLDevice {
 }
 
 extension CLDevice {
-  // OpenCL 1.0
-
   public var type: CLDeviceType {
     if mtlDevice === CLDevice.default.mtlDevice {
       return [.gpu, .default]
@@ -120,8 +118,8 @@ extension CLDevice {
   }
 
   public var preferredVectorWidthDouble: UInt32 {
-    // TODO: Support double precision
-    0
+    // Encourage coalescing 4 operations into one function call.
+    4
   }
 
   public var preferredVectorWidthHalf: UInt32 {
@@ -157,8 +155,8 @@ extension CLDevice {
   }
 
   public var nativeVectorWidthDouble: UInt32 {
-    // TODO: Support double precision
-    0
+    // Encourage coalescing 4 operations into one function call.
+    4
   }
 
   public var nativeVectorWidthHalf: UInt32 {
@@ -200,8 +198,7 @@ extension CLDevice {
     UInt64(mtlDevice.maxBufferLength)
   }
 
-  // NOTE: Rephrases "imageSupport" to "supportsImages", should repeat this
-  // convention in other places.
+  // Rephrases "imageSupport" to "supportsImages".
   public var supportsImages: Bool {
     true
   }
@@ -296,7 +293,8 @@ extension CLDevice {
   }
 
   public var maxPipeArguments: UInt32 {
-    16
+    // Pipes are not supported yet.
+    0  // 16
   }
 
   public var pipeMaxActiveReservations: UInt32 {
@@ -306,7 +304,9 @@ extension CLDevice {
     //
     // Intel uses this packet size:
     // https://bugzilla.redhat.com/show_bug.cgi?id=2075944
-    1
+
+    // Pipes are not supported yet.
+    0  // 1
   }
 
   public var pipeMaxPacketSize: UInt32 {
@@ -316,12 +316,323 @@ extension CLDevice {
     //
     // Intel uses this packet size:
     // https://bugzilla.redhat.com/show_bug.cgi?id=2075944
-    1024
+
+    // Pipes are not supported yet.
+    0  // 1024
   }
 
   public var maxParameterSize: Int {
     // Maximum size of constant buffer arguments in Metal.
     4096
+  }
+
+  public var memoryBaseAddressAlign: Int {
+    // Alignment in bits, not bytes.
+    switch _vendor {
+    case .apple:
+      return 4096 * 8
+    case .intel:
+      return 128 * 8
+    case .amd:
+      return 4096 * 8
+    }
+  }
+
+  public var singleFloatingPointConfiguration:
+    CLDeviceFloatingPointConfiguration
+  {
+    return [
+      // Denorms are disabled in Apple's OpenCL driver, but available in AIR.
+      .denorm,
+      .infNaN,
+      .roundToNearest,
+      .roundToZero,
+
+      // Round to infinity accomplished through emulation.
+      .roundToInf,
+      .fma,
+
+      // Correctly rounded divide/sqrt specified through a compile option.
+      // Precise versions of each MSL function should also be exposed to SPIR-V
+      // individually.
+      //
+      // This feature is exclusive to single precision; no other configurations
+      // should include it.
+      .correctlyRoundedDivideSqrt,
+    ]
+  }
+
+  public var doubleFloatingPointConfiguration:
+    CLDeviceFloatingPointConfiguration
+  {
+    return [
+      .denorm,
+      .infNaN,
+      .roundToNearest,
+      .roundToZero,
+      .roundToInf,
+      .fma,
+
+      // Use emulation on all devices, including those with hardware FP64.
+      .softFloat,
+    ]
+  }
+
+  // NOTE: The OpenCL 3.0 specification does not include the macro for this.
+  public var halfFloatingPointConfiguration: CLDeviceFloatingPointConfiguration
+  {
+    return [
+      // Denorms are disabled in Apple's OpenCL driver, but available in AIR.
+      .denorm,
+      .infNaN,
+      .roundToNearest,
+      .roundToZero,
+
+      // Round to infinity accomplished through emulation.
+      .roundToInf,
+      .fma,
+    ]
+  }
+
+  var globalMemoryCacheType: CLDeviceMemoryCacheType {
+    .none
+  }
+
+  var globalMemoryCacheLineSize: UInt32 {
+    0
+  }
+
+  var globalMemoryCacheSize: UInt64 {
+    0
+  }
+
+  var globalMemorySize: UInt64 {
+    // Not the actual memory size on Apple silicon; rather, something close to
+    // 70% of the total RAM. The maximum usable RAM gets murky, because it's
+    // shared with the CPU and can page to the disk.
+    mtlDevice.recommendedMaxWorkingSetSize
+  }
+
+  var maxConstantBufferSize: UInt64 {
+    switch _vendor {
+    case .apple:
+      return 1024 * 1024 * 1024
+    default:
+      return 64 * 1024
+    }
+  }
+
+  var maxConstantArguments: UInt32 {
+    switch _vendor {
+    case .apple:
+      return 31
+    default:
+      // The MSL specification says 14, but Apple's OpenCL driver says 8.
+      return 14
+    }
+  }
+
+  var maxGlobalVariableSize: Int {
+    // Not supporting global variables yet.
+    0
+  }
+
+  var globalVariablePreferredTotalSize: Int {
+    // Not supporting global variables yet.
+    0
+  }
+
+  var localMemoryType: CLDeviceLocalMemoryType {
+    .local
+  }
+
+  var localMemorySize: UInt64 {
+    UInt64(mtlDevice.maxThreadgroupMemoryLength)
+  }
+
+  // Rephrases "errorCorrectionSupport" to "supportsErrorCorrection".
+  var supportsErrorCorrection: Bool {
+    false
+  }
+
+  var profilingTimerResolution: UInt64 {
+    // TODO: Use OpenCL to find the exact resolution on Intel and AMD.
+    // TODO: Manually test Apple's profiling timer resolution, because I don't
+    // trust the extremely low value of 1000 ns acquired from Apple's OpenCL
+    // driver. Especially when CPU and GPU are in perfect sync, while CPU has a
+    // supposed resolution of 41 ns.
+    notImplementedError()
+  }
+
+  // Rephrases "endianLittle" to "isLittleEndian".
+  public var isLittleEndian: Bool {
+    true
+  }
+
+  // Rephrases "available" to "isAvailable".
+  public var isAvailable: Bool {
+    true
+  }
+
+  // Rephrases "compilerAvailable" to "compilerIsAvailable".
+  public var compilerIsAvailable: Bool {
+    // On iOS, the online compiler may not support all optimizations.
+    true
+  }
+
+  // Rephrases "linkerAvailable" to "linkerIsAvailable".
+  public var linkerIsAvailable: Bool {
+    true
+  }
+
+  public var executionCapabilities: CLDeviceExecutionCapabilities {
+    .kernel
+  }
+
+  public var queueOnHostProperties: CLCommandQueueProperties {
+    // These two profiling methods are mutually exclusive.
+    if mtlDevice.supportsCounterSampling(.atDispatchBoundary),
+      mtlDevice.supportsCounterSampling(.atBlitBoundary)
+    {
+      // Can profile without creating a new command encoder.
+      // Only possible on Intel Macs.
+      return [.outOfOrderExecutionModeEnable, .profilingEnable]
+    } else if mtlDevice.supportsCounterSampling(.atStageBoundary) {
+      // Must profile by creating a new command encoder.
+      // Only possible on Apple silicon Macs and iOS.
+      return [.outOfOrderExecutionModeEnable, .profilingEnable]
+    } else {
+      fatalError("Metal device '\(mtlDevice.name)' does not support profiling.")
+    }
+  }
+
+  public var queueOnDeviceProperties: CLCommandQueueProperties {
+    // MoltenCL does not support on-device queues yet.
+    []
+  }
+
+  public var queueOnDevicePreferredSize: UInt32 {
+    0
+  }
+
+  public var queueOnDeviceMaxSize: UInt32 {
+    0
+  }
+
+  public var maxOnDeviceQueues: UInt32 {
+    0
+  }
+
+  public var maxOnDeviceEvents: UInt32 {
+    0
+  }
+
+  public var builtInKernels: [String] {
+    []
+  }
+
+  public var builtInKernelsWithVersion: [CLNameVersion] {
+    []
+  }
+
+  public var platform: CLPlatform {
+    CLPlatform.default
+  }
+
+  public var name: String {
+    mtlDevice.name
+  }
+
+  public var vendor: String {
+    "Apple"
+  }
+
+  // The C macro `CL_DRIVER_VERSION` does not include the word "DEVICE".
+  public var driverVersion: String {
+    // Alpha version, pre-release.
+    //
+    // TODO: Make GitHub action that automatically writes the version into a
+    // Swift source file, as a global variable. Force this action to trigger
+    // before each new release.
+    "0.1"
+  }
+
+  public var profile: String {
+    platform.profile
+  }
+
+  public var version: String {
+    platform.version
+  }
+
+  public var numericVersion: CLVersion {
+    platform.numericVersion
+  }
+
+  private static let _openclCAllVersions: [CLNameVersion] = {
+    // Returns newest first to ensure OpenCL C 3.0 is recognized.
+    return [
+      .init(version: .init(major: 3, minor: 0), name: "OpenCL C"),
+      .init(version: .init(major: 1, minor: 2), name: "OpenCL C"),
+      .init(version: .init(major: 1, minor: 1), name: "OpenCL C"),
+      .init(version: .init(major: 1, minor: 0), name: "OpenCL C"),
+    ]
+  }()
+
+  public var openclCAllVersions: [CLNameVersion] {
+    Self._openclCAllVersions
+  }
+
+  private static let _openclCFeatures: [CLNameVersion] = {
+    let _3_0_0 = CLVersion(major: 1, minor: 1, patch: 0)
+
+    let features: [(CLVersion, String)] = [
+      (_3_0_0, "__opencl_c_3d_image_writes"),
+      (_3_0_0, "__opencl_c_atomic_scope_device"),
+      (_3_0_0, "__opencl_c_fp64"),
+      (_3_0_0, "__opencl_c_images"),
+      (_3_0_0, "__opencl_c_int64"),
+      (_3_0_0, "__opencl_c_read_write_images"),
+      (_3_0_0, "__opencl_c_subgroups"),
+      (_3_0_0, "__opencl_c_work_group_collective_functions"),
+    ]
+
+    return features.map { CLNameVersion(version: $0.0, name: $0.1) }
+  }()
+
+  public var openclCFeatures: [CLNameVersion] {
+    Self._openclCFeatures
+  }
+
+  public var extensions: [String] {
+    CLPlatform._extensions
+  }
+
+  public var extensionsWithVersion: [CLNameVersion] {
+    CLPlatform._extensionsWithVersion
+  }
+
+  public var printfBufferSize: Int {
+    // Arbitrary number, no significant reason for any particular size.
+    // Apple and Intel GPUs return the minimum (1 MB), while AMD GPUs return
+    // 128 MB on Apple's OpenCL driver. Let's create a sweet spot that doesn't
+    // eat up significant memory on small devices.
+    32 * 1024 * 1024
+  }
+
+  // Rephrases "preferredInteropUserSync" to
+  // "prefersInteropUserSynchronization".
+  public var prefersInteropUserSynchronization: Bool {
+    // Don't know how Metal interop will be implemented. Once it is, this
+    // property may change to `false`.
+    true
+  }
+
+  // Nullable because the OpenCL specification says it can be `NULL`. Repeat
+  // this convention for other properties that are explicitly nullable.
+  public var parentDevice: CLDevice? {
+    // MoltenCL does not support device fission.
+    nil
   }
 }
 
