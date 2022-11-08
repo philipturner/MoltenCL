@@ -11,7 +11,7 @@ Supported features (not exhaustive):
 - compiling shaders in OpenCL C and Metal Shading Language
 - transforming OpenCL SPIR-V and AIR binary code into kernel objects
 - hardware-accelerated matrix multiplication intrinsics for AI/ML (`simdgroup_matrix`)
-- SYCL USM pointers that expose GPU virtual addresses
+- SYCL USM device pointers that expose GPU virtual addresses
 - subgroup permute/reductions
 - workgroup collective functions, async workgroup copies
 - built-in integration with hipSYCL
