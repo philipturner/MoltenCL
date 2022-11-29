@@ -1,4 +1,4 @@
-> Work on this library has paused. The more future-ready choice is to directly integrate Metal into hipSYCL. That way, SYCL can support more vendors and become more viable to replace CUDA for GPGPU.
+<!-- Work on this library has paused. The more future-ready choice is to directly integrate Metal into hipSYCL. That way, SYCL can support more vendors and become more viable to replace CUDA for GPGPU. -->
 
 # MoltenCL
 
