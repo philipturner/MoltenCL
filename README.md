@@ -1,3 +1,5 @@
+> Development of this repository has been put on hold. I am not sure whether MoltenCL is the best investment of time, as SYCL may be used instead by most code bases. Furthermore, existing OpenCL code could be migrated to SYCL.
+
 <!-- Work on this library has paused. The more future-ready choice is to directly integrate Metal into hipSYCL. That way, SYCL can support more vendors and become more viable to replace CUDA for GPGPU. -->
 
 # MoltenCL
